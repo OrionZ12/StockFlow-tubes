@@ -20,20 +20,8 @@ class LoginScreen extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Back button
-              IconButton(
-                onPressed: () => context.pop(),
-                icon: Container(
-                  decoration: BoxDecoration(
-                    color: Colors.blue.shade700,
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                  padding: const EdgeInsets.all(6),
-                  child: const Icon(Icons.arrow_back, color: Colors.white),
-                ),
-              ),
 
-              const SizedBox(height: 30),
+              const SizedBox(height: 130),
 
               // Title
               const Center(

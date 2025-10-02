@@ -17,16 +17,8 @@ class SigninScreen extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
 
-              IconButton(
-                icon: const Icon(Icons.arrow_back, color: Colors.white),
-                style: IconButton.styleFrom(
-                  backgroundColor: Colors.blue.shade700,
-                ),
-                onPressed: () {
-                  context.pop();
-                },
-              ),
-              const SizedBox(height: 20),
+
+              const SizedBox(height: 120),
 
               const Center(
                 child: Text(
