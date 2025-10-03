@@ -13,7 +13,7 @@ class LoginScreen extends StatelessWidget {
     final passwordController = TextEditingController();
 
     return Scaffold(
-      backgroundColor: const Color(0xFFEAF2FF), // light blue background
+      backgroundColor: const Color(0xFFEAF2FF),
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(20.0),
@@ -23,7 +23,6 @@ class LoginScreen extends StatelessWidget {
 
               const SizedBox(height: 130),
 
-              // Title
               const Center(
                 child: Text(
                   "Selamat Datang!",
@@ -58,7 +57,6 @@ class LoginScreen extends StatelessWidget {
 
               const SizedBox(height: 16),
 
-              // Password field
               TextField(
                 controller: passwordController,
                 obscureText: true,

@@ -18,7 +18,6 @@ class _SplashScreenState extends State<SplashScreen> {
 
     Timer(const Duration(seconds: 3), () {
       if (!mounted) return;
-      // Go to firstime_screen.dart
       context.go(AppRoutes.firstTime);
     });
   }
@@ -26,12 +25,12 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFE6F0FF), // light blue background
+      backgroundColor: const Color(0xFFE6F0FF),
       body: SafeArea(
         child: Center(
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.center, // center vertically
-            crossAxisAlignment: CrossAxisAlignment.center, // center horizontally
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               // logo
               Image.asset(
@@ -41,7 +40,6 @@ class _SplashScreenState extends State<SplashScreen> {
               ),
               const SizedBox(height: 16),
 
-              // StockFlow title
               RichText(
                 text: const TextSpan(
                   style: TextStyle(

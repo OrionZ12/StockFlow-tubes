@@ -102,7 +102,7 @@ class SigninScreen extends StatelessWidget {
                     ),
                   ),
                   onPressed: () {
-                    context.go(AppRoutes.login); // redirect ke login_screen.dart
+                    context.go(AppRoutes.login);
                   },
                   child: const Text(
                     "Daftar",

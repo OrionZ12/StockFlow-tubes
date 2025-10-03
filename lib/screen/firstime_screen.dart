@@ -14,7 +14,7 @@ class FirstTimeScreen extends StatelessWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              // Top Image
+
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20.0),
                 child: Image.asset(
@@ -26,7 +26,6 @@ class FirstTimeScreen extends StatelessWidget {
 
               const SizedBox(height: 40),
 
-              // Title text
               RichText(
                 textAlign: TextAlign.center,
                 text: TextSpan(
