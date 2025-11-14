@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import '../widget/bottom_nav_bar.dart';
+import 'package:go_router/go_router.dart';
+import '../config/routes.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -14,10 +16,18 @@ class _HomeScreenState extends State<HomeScreen> {
   void _onNavTap(int index) {
     setState(() => _selectedIndex = index);
 
-    // TODO: pindah page pakai GoRouter atau Navigator
-    // if (index == 1) context.push("/riwayat");
-    // if (index == 2) context.push("/profil");
+    // NAVIGASI MENGGUNAKAN GoRouter
+    if (index == 0) {
+      context.go('/home');
+    }
+    else if (index == 1) {
+      context.go('/history');   // ⬅ pindah ke RiwayatPage
+    }
+    else if (index == 2) {
+      context.go('/profile');   // jika nanti ada
+    }
   }
+
 
   @override
   Widget build(BuildContext context) {
