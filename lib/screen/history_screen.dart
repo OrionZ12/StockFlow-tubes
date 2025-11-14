@@ -65,11 +65,11 @@ class _RiwayatPageState extends State<RiwayatPage> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
-          navItem(context, 0, "Beranda", "assets/icons/home.png",
+          navItem(context, 0, "Beranda", "assets/icons/home_icon.png",
               iconSize, bubbleSize),
-          navItem(context, 1, "Riwayat", "assets/icons/history.png",
+          navItem(context, 1, "Riwayat", "assets/icons/history_icon.png",
               iconSize, bubbleSize),
-          navItem(context, 2, "Profil", "assets/icons/profile.png",
+          navItem(context, 2, "Profil", "assets/icons/profil_icon.png",
               iconSize, bubbleSize),
         ],
       ),
@@ -149,7 +149,15 @@ class _RiwayatPageState extends State<RiwayatPage> {
                   ),
                   const Spacer(),
                   const Text(
-                    "StockFlow",
+                    "Stock",
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Color.fromARGB(255, 0, 0, 0),
+                    ),
+                  ),
+                  const Text(
+                    "Flow",
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,

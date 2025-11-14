@@ -28,12 +28,32 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFE6F0FF),
-      appBar: AppBar(title: const Text("Home")),
+      appBar: AppBar(
+        backgroundColor: const Color(0xFFE6F0FF),
+        title: Row(
+                    children: [
+                      const Text(
+                        "Stock",
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Color.fromARGB(255, 0, 0, 0),
+                        ),
+                      ),
+                      const Text(
+                        "Flow",
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xff5a78c9),
+                        ),
+                      ),
+                    ],
+                  )),
       body: const Center(
         child: Text(
           "......",
