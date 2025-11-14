@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:go_router/go_router.dart';
 import '../config/routes.dart';
 
-
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
 
@@ -27,45 +26,60 @@ class _SplashScreenState extends State<SplashScreen> {
     return Scaffold(
       backgroundColor: const Color(0xFFE6F0FF),
       body: SafeArea(
-        child: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              // logo
-              Image.asset(
-                'assets/images/logo.png',
-                width: MediaQuery.of(context).size.width * 0.3,
-                height: MediaQuery.of(context).size.width * 0.3,
-              ),
-              const SizedBox(height: 16),
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            double logoSize = constraints.maxWidth * 0.35;
+            double titleFont = constraints.maxWidth * 0.08;
+            double footerFont = constraints.maxWidth * 0.04;
 
-              RichText(
-                text: const TextSpan(
-                  style: TextStyle(
-                    fontFamily: 'RobotoSerif',
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
+            double spacingTop = constraints.maxHeight * 0.02;
+            double spacingMiddle = constraints.maxHeight * 0.05;
+
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+
+                  /// RESPONSIVE LOGO
+                  Image.asset(
+                    'assets/images/logo.png',
+                    width: logoSize.clamp(80, 180),
+                    height: logoSize.clamp(80, 180),
+                    fit: BoxFit.contain,
                   ),
-                  children: [
-                    TextSpan(text: 'Stock', style: TextStyle(color: Colors.black)),
-                    TextSpan(text: 'Flow', style: TextStyle(color: Colors.blue)),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 40),
 
-              // footer text
-              const Text(
-                "by TriWeight",
-                style: TextStyle(
-                  fontFamily: 'RobotoSerif',
-                  fontSize: 14,
-                  color: Colors.black54,
-                ),
+                  SizedBox(height: spacingTop.clamp(10, 32)),
+
+                  /// RESPONSIVE RICHTEXT TITLE
+                  RichText(
+                    text: TextSpan(
+                      style: TextStyle(
+                        fontFamily: 'RobotoSerif',
+                        fontSize: titleFont.clamp(22, 40),
+                        fontWeight: FontWeight.bold,
+                      ),
+                      children: const [
+                        TextSpan(text: 'Stock', style: TextStyle(color: Colors.black)),
+                        TextSpan(text: 'Flow', style: TextStyle(color: Colors.blue)),
+                      ],
+                    ),
+                  ),
+
+                  SizedBox(height: spacingMiddle.clamp(20, 60)),
+
+                  /// RESPONSIVE FOOTER
+                  Text(
+                    "by TriWeight",
+                    style: TextStyle(
+                      fontFamily: 'RobotoSerif',
+                      fontSize: footerFont.clamp(10, 18),
+                      color: Colors.black54,
+                    ),
+                  ),
+                ],
               ),
-            ],
-          ),
+            );
+          },
         ),
       ),
     );

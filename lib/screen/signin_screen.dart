@@ -8,133 +8,174 @@ class SigninScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
+
     return Scaffold(
       backgroundColor: const Color(0xFFE6EEFF),
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            // Responsive sizes
+            double titleFont = constraints.maxWidth * 0.06;
+            double labelFont = constraints.maxWidth * 0.04;
+            double inputFont = constraints.maxWidth * 0.04;
 
+            double topSpacing = constraints.maxHeight * 0.12;
+            double inputSpacing = constraints.maxHeight * 0.018;
 
-              const SizedBox(height: 120),
+            double buttonWidth = constraints.maxWidth * 0.6;
 
-              const Center(
-                child: Text(
-                  "Selamat Datang!",
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 20),
+            return SingleChildScrollView(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
 
-              const Text(
-                "Daftar ke StockFlow",
-                style: TextStyle(fontWeight: FontWeight.w600),
-              ),
-              const SizedBox(height: 12),
+                    /// RESPONSIVE TOP SPACING
+                    SizedBox(height: topSpacing.clamp(60, 150)),
 
-              TextField(
-                decoration: InputDecoration(
-                  hintText: "Masukkan nama anda",
-                  filled: true,
-                  fillColor: Colors.white,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(6.0),
-                    borderSide: BorderSide.none,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 12),
-
-              TextField(
-                decoration: InputDecoration(
-                  hintText: "Masukkan email atau nomor HP anda",
-                  filled: true,
-                  fillColor: Colors.white,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(6.0),
-                    borderSide: BorderSide.none,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 12),
-
-              TextField(
-                obscureText: true,
-                decoration: InputDecoration(
-                  hintText: "Masukkan kata sandi",
-                  filled: true,
-                  fillColor: Colors.white,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(6.0),
-                    borderSide: BorderSide.none,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 12),
-
-              TextField(
-                obscureText: true,
-                decoration: InputDecoration(
-                  hintText: "Masukkan ulang kata sandi",
-                  filled: true,
-                  fillColor: Colors.white,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(6.0),
-                    borderSide: BorderSide.none,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 24),
-
-              Center(
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blue.shade700,
-                    padding: const EdgeInsets.symmetric(
-                        vertical: 14.0, horizontal: 100.0),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                  ),
-                  onPressed: () {
-                    context.go(AppRoutes.login);
-                  },
-                  child: const Text(
-                    "Daftar",
-                    style: TextStyle(color: Colors.white, fontSize: 16),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 16),
-
-              Center(
-                child: RichText(
-                  text: TextSpan(
-                    text: "Sudah punya akun? Masuk ",
-                    style: const TextStyle(color: Colors.black),
-                    children: [
-                      TextSpan(
-                        text: "disini",
-                        style: const TextStyle(
-                          color: Colors.blue,
-                          decoration: TextDecoration.underline,
+                    /// TITLE
+                    Center(
+                      child: Text(
+                        "Selamat Datang!",
+                        style: TextStyle(
+                          fontSize: titleFont.clamp(18, 28),
+                          fontWeight: FontWeight.bold,
                         ),
-                        recognizer: TapGestureRecognizer()
-                          ..onTap = () {
-                            context.go(AppRoutes.login);
-                          },
                       ),
-                    ],
-                  ),
+                    ),
+
+                    const SizedBox(height: 20),
+
+                    Text(
+                      "Daftar ke StockFlow",
+                      style: TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize: labelFont.clamp(14, 20),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+
+                    /// INPUTS — RESPONSIVE FONTS
+                    TextField(
+                      style: TextStyle(fontSize: inputFont.clamp(12, 18)),
+                      decoration: InputDecoration(
+                        hintText: "Masukkan nama anda",
+                        hintStyle: TextStyle(fontSize: inputFont.clamp(12, 18)),
+                        filled: true,
+                        fillColor: Colors.white,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(6.0),
+                          borderSide: BorderSide.none,
+                        ),
+                      ),
+                    ),
+                    SizedBox(height: inputSpacing),
+
+                    TextField(
+                      style: TextStyle(fontSize: inputFont.clamp(12, 18)),
+                      decoration: InputDecoration(
+                        hintText: "Masukkan email atau nomor HP anda",
+                        hintStyle: TextStyle(fontSize: inputFont.clamp(12, 18)),
+                        filled: true,
+                        fillColor: Colors.white,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(6.0),
+                          borderSide: BorderSide.none,
+                        ),
+                      ),
+                    ),
+                    SizedBox(height: inputSpacing),
+
+                    TextField(
+                      obscureText: true,
+                      style: TextStyle(fontSize: inputFont.clamp(12, 18)),
+                      decoration: InputDecoration(
+                        hintText: "Masukkan kata sandi",
+                        hintStyle: TextStyle(fontSize: inputFont.clamp(12, 18)),
+                        filled: true,
+                        fillColor: Colors.white,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(6.0),
+                          borderSide: BorderSide.none,
+                        ),
+                      ),
+                    ),
+                    SizedBox(height: inputSpacing),
+
+                    TextField(
+                      obscureText: true,
+                      style: TextStyle(fontSize: inputFont.clamp(12, 18)),
+                      decoration: InputDecoration(
+                        hintText: "Masukkan ulang kata sandi",
+                        hintStyle: TextStyle(fontSize: inputFont.clamp(12, 18)),
+                        filled: true,
+                        fillColor: Colors.white,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(6.0),
+                          borderSide: BorderSide.none,
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(height: 24),
+
+                    /// RESPONSIVE BUTTON
+                    Center(
+                      child: SizedBox(
+                        width: buttonWidth.clamp(180, 300),
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.blue.shade700,
+                            padding: const EdgeInsets.symmetric(vertical: 14.0),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                          ),
+                          onPressed: () => context.go(AppRoutes.login),
+                          child: Text(
+                            "Daftar",
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: inputFont.clamp(14, 20),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(height: 16),
+
+                    /// SIGN IN LINK — RESPONSIVE FONT
+                    Center(
+                      child: RichText(
+                        text: TextSpan(
+                          text: "Sudah punya akun? Masuk ",
+                          style: TextStyle(
+                            color: Colors.black,
+                            fontSize: inputFont.clamp(12, 16),
+                          ),
+                          children: [
+                            TextSpan(
+                              text: "disini",
+                              style: const TextStyle(
+                                color: Colors.blue,
+                                decoration: TextDecoration.underline,
+                              ),
+                              recognizer: TapGestureRecognizer()
+                                ..onTap = () => context.go(AppRoutes.login),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
-            ],
-          ),
+            );
+          },
         ),
       ),
     );
