@@ -62,6 +62,9 @@ flutter:
     - assets/images/logo.png
     - assets/images/warehouse.png
     - assets/images/check.png
+    - assets/icons/history_icon.png
+    - assets/icons/home_icon.png
+    - assets/icons/profil_icon.png
   fonts:
     - family: RobotoSerif
       fonts:
