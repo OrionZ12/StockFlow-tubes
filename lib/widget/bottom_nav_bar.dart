@@ -14,7 +14,7 @@ class BottomNavBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
 
-    // Responsif dengan batas minimal dan maksimal
+    // Responsif dengan ba tas minimal dan maksimal
     double iconSize = (screenWidth * 0.07).clamp(22, 34);
     double fontSize = (screenWidth * 0.035).clamp(10, 16);
 
