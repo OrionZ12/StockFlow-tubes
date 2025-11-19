@@ -7,19 +7,21 @@ import '../config/routes.dart';
 /// ====== WARNA SESUAI PALET FIGMA ======
 const Color kPageBackground = Color(0xFFE0EBFD); // E0EBFD
 const Color kCardBackground = Color(0xFFFFFFFF); // FFFFFF
-const Color kSoftBorder     = Color(0xFFD3DBED); // D3DBED
+const Color kSoftBorder = Color(0xFFD3DBED); // D3DBED
 
-const Color kTextPrimary    = Color(0xFF000000); // 000000
-const Color kTextSecondary  = Color(0xFF474747); // 474747
-const Color kTextMuted      = Color(0xFF929292); // 929292
+const Color kTextPrimary = Color(0xFF000000); // 000000
+const Color kTextSecondary = Color(0xFF474747); // 474747
+const Color kTextMuted = Color(0xFF929292); // 929292
 
-const Color kBlueMain       = Color(0xFF5572DE); // badge jumlah
-const Color kBlueSoft       = Color(0xFF7B94F3); // bubble nav
-const Color kBlueMedium     = Color(0xFF506DB8); // icon search, v, FAB luar
-const Color kBlueTitle      = Color(0xFF2D4990); // “Terlaris hari ini”, “Hampir habis”
+const Color kBlueMain = Color(0xFF5572DE); // badge jumlah
+const Color kBlueSoft = Color(0xFF7B94F3); // bubble nav
+const Color kBlueMedium = Color(0xFF506DB8); // icon search, v, FAB luar
+const Color kBlueTitle = Color(
+  0xFF2D4990,
+); // “Terlaris hari ini”, “Hampir habis”
 
-const Color kGreen          = Color(0xFF0E7A44); // teks hijau
-const Color kRed            = Color(0xFFD23737); // teks merah
+const Color kGreen = Color(0xFF0E7A44); // teks hijau
+const Color kRed = Color(0xFFD23737); // teks merah
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -142,9 +144,7 @@ class _HomeScreenState extends State<HomeScreen> {
               const SizedBox(height: 16),
               const _SearchAndFilterRow(),
               const SizedBox(height: 16),
-              Expanded(
-                child: _ProductTableCard(products: _dummyProducts),
-              ),
+              Expanded(child: _ProductTableCard(products: _dummyProducts)),
             ],
           ),
         ),
@@ -192,11 +192,7 @@ class _UpdateCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(18),
         border: Border.all(color: kSoftBorder, width: 1),
         boxShadow: const [
-          BoxShadow(
-            color: Colors.black12,
-            blurRadius: 5,
-            offset: Offset(0, 2),
-          ),
+          BoxShadow(color: Colors.black12, blurRadius: 5, offset: Offset(0, 2)),
         ],
       ),
       child: Column(
@@ -293,11 +289,7 @@ class _UpdateText extends StatelessWidget {
               for (final line in lines)
                 Text(
                   line,
-                  style: TextStyle(
-                    fontSize: 12,
-                    height: 1.4,
-                    color: color,
-                  ),
+                  style: TextStyle(fontSize: 12, height: 1.4, color: color),
                 ),
             ],
           ),
@@ -337,10 +329,7 @@ class _SearchAndFilterRow extends StatelessWidget {
                 Expanded(
                   child: Text(
                     'Cari Produk',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: kTextMuted,
-                    ),
+                    style: TextStyle(fontSize: 12, color: kTextMuted),
                   ),
                 ),
               ],
@@ -364,10 +353,7 @@ class _SearchAndFilterRow extends StatelessWidget {
               children: const [
                 Text(
                   'Semua Kategori',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: kTextSecondary,
-                  ),
+                  style: TextStyle(fontSize: 12, color: kTextSecondary),
                 ),
                 Icon(
                   Icons.keyboard_arrow_down_rounded,
@@ -398,19 +384,17 @@ class _ProductTableCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(18),
         border: Border.all(color: kSoftBorder),
         boxShadow: const [
-          BoxShadow(
-            color: Colors.black12,
-            blurRadius: 5,
-            offset: Offset(0, 2),
-          ),
+          BoxShadow(color: Colors.black12, blurRadius: 5, offset: Offset(0, 2)),
         ],
       ),
       child: Column(
         children: [
           // header
           Container(
-            padding:
-            const EdgeInsets.symmetric(horizontal: 16.0, vertical: 10.0),
+            padding: const EdgeInsets.symmetric(
+              horizontal: 16.0,
+              vertical: 10.0,
+            ),
             child: const Row(
               children: [
                 Expanded(
@@ -445,11 +429,13 @@ class _ProductTableCard extends StatelessWidget {
           Expanded(
             child: ListView.separated(
               padding: const EdgeInsets.symmetric(
-                  horizontal: 16.0, vertical: 8.0),
+                horizontal: 16.0,
+                vertical: 8.0,
+              ),
               itemBuilder: (context, index) =>
                   _ProductRow(product: products[index]),
               separatorBuilder: (_, __) =>
-              const Divider(height: 16, color: kSoftBorder),
+                  const Divider(height: 16, color: kSoftBorder),
               itemCount: products.length,
             ),
           ),
@@ -458,6 +444,7 @@ class _ProductTableCard extends StatelessWidget {
     );
   }
 }
+
 /// ====== SATU BARIS PRODUK ======
 class _ProductRow extends StatelessWidget {
   final _ProductData product;
@@ -502,7 +489,7 @@ class _ProductRow extends StatelessWidget {
           child: Container(
             padding: const EdgeInsets.symmetric(vertical: 6.0),
             decoration: BoxDecoration(
-              color: kBlueMain,          // 5572DE
+              color: kBlueMain, // 5572DE
               borderRadius: BorderRadius.circular(30),
             ),
             alignment: Alignment.center,
@@ -520,7 +507,6 @@ class _ProductRow extends StatelessWidget {
     );
   }
 }
-
 
 /// ====== MODEL DATA DUMMY ======
 class _ProductData {
