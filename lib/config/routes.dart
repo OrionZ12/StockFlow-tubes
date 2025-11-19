@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:tubes/screen/history_screen.dart';
 import 'package:tubes/screen/notification_screen.dart';
+import 'package:tubes/screen/profile_screen.dart';
 
 import '../screen/splash_screen.dart';
 import '../screen/firstime_screen.dart';
@@ -19,6 +20,7 @@ class AppRoutes {
   static const String home = '/home';
   static const String history = '/history';
   static const String notification = '/notification';
+  static const String profile = '/profile';
 }
 
 GoRouter createRouter() {
@@ -67,7 +69,12 @@ GoRouter createRouter() {
       GoRoute(
         path: AppRoutes.notification,
         name: 'notification',
-        builder: (context, state) => NotificationStaffPage(),
+        builder: (context, state) => const NotificationStaffPage(),
+      ),
+      GoRoute(
+        path: AppRoutes.profile,
+        name: 'profile',
+        builder: (context, state) => const ProfilePage(),
       ),
     ],
     errorBuilder: (context, state) => Scaffold(
