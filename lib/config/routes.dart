@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:tubes/screen/history_screen.dart';
 import 'package:tubes/screen/notification_screen.dart';
 import 'package:tubes/screen/profile_screen.dart';
+import 'package:tubes/screen/account_screen.dart';
 
 import '../screen/splash_screen.dart';
 import '../screen/firstime_screen.dart';
@@ -21,6 +22,7 @@ class AppRoutes {
   static const String history = '/history';
   static const String notification = '/notification';
   static const String profile = '/profile';
+  static const String account = '/account';
 }
 
 GoRouter createRouter() {
@@ -75,6 +77,11 @@ GoRouter createRouter() {
         path: AppRoutes.profile,
         name: 'profile',
         builder: (context, state) => const ProfilePage(),
+      ),
+      GoRoute(
+        path: AppRoutes.account,
+        name: 'account',
+        builder: (context, state) => const AccountPage(),
       ),
     ],
     errorBuilder: (context, state) => Scaffold(

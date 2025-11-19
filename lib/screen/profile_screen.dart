@@ -20,9 +20,7 @@ const Color kTextMuted = Color(0xFF929292); // 929292
 const Color kBlueMain = Color(0xFF5572DE); // badge jumlah
 const Color kBlueSoft = Color(0xFF7B94F3); // bubble nav
 const Color kBlueMedium = Color(0xFF506DB8); // icon search, v, FAB luar
-const Color kBlueTitle = Color(
-  0xFF2D4990,
-); 
+const Color kBlueTitle = Color(0xFF2D4990);
 
 class _ProfilePageState extends State<ProfilePage> {
   int _selectedIndex = 2;
@@ -83,7 +81,7 @@ class _ProfilePageState extends State<ProfilePage> {
                   _buildProfileMenuItem(
                     label: "Informasi Akun",
                     onTap: () {
-                      // Handle Informasi Akun tap
+                      context.go('/account');
                     },
                   ),
                   const SizedBox(height: 12),
