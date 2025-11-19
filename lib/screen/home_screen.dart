@@ -210,10 +210,13 @@ class _UpdateCard extends StatelessWidget {
                 ),
               ),
               const Spacer(),
-              Icon(
-                Icons.notifications_none_rounded,
-                color: kTextSecondary,
-                size: 20,
+              GestureDetector(
+                onTap: () => context.go(AppRoutes.notification),
+                child: Icon(
+                  Icons.notifications_none_rounded,
+                  color: kTextSecondary,
+                  size: 20,
+                ),
               ),
             ],
           ),

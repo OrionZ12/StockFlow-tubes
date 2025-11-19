@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:tubes/screen/history_screen.dart';
+import 'package:tubes/screen/notification_screen.dart';
 
 import '../screen/splash_screen.dart';
 import '../screen/firstime_screen.dart';
@@ -8,7 +9,6 @@ import '../screen/login_screen.dart';
 import '../screen/signin_screen.dart';
 import '../screen/signsuc_screen.dart';
 import '../screen/home_screen.dart';
-
 
 class AppRoutes {
   static const String splash = '/splash';
@@ -18,10 +18,12 @@ class AppRoutes {
   static const String signSuccess = '/signsuccess';
   static const String home = '/home';
   static const String history = '/history';
+  static const String notification = '/notification';
 }
 
 GoRouter createRouter() {
-  final GlobalKey<NavigatorState> rootNavigatorKey = GlobalKey<NavigatorState>();
+  final GlobalKey<NavigatorState> rootNavigatorKey =
+      GlobalKey<NavigatorState>();
 
   return GoRouter(
     navigatorKey: rootNavigatorKey,
@@ -61,6 +63,11 @@ GoRouter createRouter() {
         path: AppRoutes.history,
         name: 'history',
         builder: (context, state) => RiwayatPage(),
+      ),
+      GoRoute(
+        path: AppRoutes.notification,
+        name: 'notification',
+        builder: (context, state) => NotificationStaffPage(),
       ),
     ],
     errorBuilder: (context, state) => Scaffold(
