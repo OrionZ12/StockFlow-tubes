@@ -1,3 +1,4 @@
 {
-    "cmake.sourceDirectory": "C:/Users/dunia/Documents/Stockflow/StockFlow-tubes/windows/flutter"
+    "cmake.sourceDirectory": "C:/Users/dunia/Documents/Stockflow/StockFlow-tubes/windows/flutter",
+    "java.configuration.updateBuildConfiguration": "interactive"
 }

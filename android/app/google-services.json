@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "285179010216",
+    "project_id": "stockflow-978a3",
+    "storage_bucket": "stockflow-978a3.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:285179010216:android:2be874f5ca71fd73c8b69d",
+        "android_client_info": {
+          "package_name": "com.example.tubes"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "285179010216-0smavf3mr4v21809nq17tnitsmvel7sh.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.tubes",
+            "certificate_hash": "dc0a87091d8e04de7a618aff9891037911dd6fb7"
+          }
+        },
+        {
+          "client_id": "285179010216-80ij5utpr02r5s16lk3lhth3aiip0udj.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDGPCBiRhFppKvIQE3RXBZRnAEQECyRRLE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "285179010216-80ij5utpr02r5s16lk3lhth3aiip0udj.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
