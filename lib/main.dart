@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_sign_in/google_sign_in.dart';
 import 'package:provider/provider.dart';
 import 'config/routes.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -8,8 +7,30 @@ import 'provider/auth_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp();
-  await GoogleSignIn.instance.initialize();
+
+  // Setup a global Flutter error handler to print errors to the console
+  FlutterError.onError = (details) {
+    FlutterError.presentError(details);
+  };
+
+  // Initialize Firebase and catch any errors so we can display them
+  String? initError;
+  try {
+    await Firebase.initializeApp();
+  } catch (e, st) {
+    initError = '$e\n$st';
+    debugPrint('Initialization error: $e');
+    debugPrint('$st');
+    // Continue running the app even if Firebase fails to initialize
+    // This allows development without full Firebase setup
+  }
+
+  if (initError != null) {
+    debugPrint(
+      'Warning: Firebase initialization failed. App will run without Firebase.',
+    );
+  }
+
   runApp(const MyApp());
 }
 

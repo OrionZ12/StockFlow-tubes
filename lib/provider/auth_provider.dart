@@ -4,18 +4,30 @@ import 'package:firebase_auth/firebase_auth.dart';
 class AuthProvider extends ChangeNotifier {
   final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
   User? _user;
+  bool _isInitialized = false;
 
   User? get user => _user;
   bool get isAuthenticated => _user != null;
+  bool get isInitialized => _isInitialized;
 
   AuthProvider() {
-    // Initialize with current user
-    _user = _firebaseAuth.currentUser;
-    // Listen to auth state changes
-    _firebaseAuth.authStateChanges().listen((User? user) {
-      _user = user;
-      notifyListeners();
-    });
+    _initializeAuth();
+  }
+
+  void _initializeAuth() {
+    try {
+      // Initialize with current user
+      _user = _firebaseAuth.currentUser;
+      // Listen to auth state changes
+      _firebaseAuth.authStateChanges().listen((User? user) {
+        _user = user;
+        notifyListeners();
+      });
+      _isInitialized = true;
+    } catch (e) {
+      debugPrint('AuthProvider initialization error: $e');
+      _isInitialized = true; // Mark as initialized even if it failed
+    }
   }
 
   // Sign up with email and password
@@ -27,6 +39,7 @@ class AuthProvider extends ChangeNotifier {
       );
       notifyListeners();
     } catch (e) {
+      debugPrint('Sign up error: $e');
       rethrow;
     }
   }
@@ -40,6 +53,7 @@ class AuthProvider extends ChangeNotifier {
       );
       notifyListeners();
     } catch (e) {
+      debugPrint('Sign in error: $e');
       rethrow;
     }
   }
@@ -50,6 +64,7 @@ class AuthProvider extends ChangeNotifier {
       await _firebaseAuth.signOut();
       notifyListeners();
     } catch (e) {
+      debugPrint('Sign out error: $e');
       rethrow;
     }
   }
