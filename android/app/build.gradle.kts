@@ -41,5 +41,10 @@ android {
 }
 
 flutter {
-    source = "../.."
+    source = "../../"
 }
+
+dependencies {
+    implementation("com.firebaseui:firebase-ui-auth:9.0.0")
+}
+

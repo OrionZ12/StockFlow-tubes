@@ -124,6 +124,7 @@ class _NotificationStaffPageState extends State<NotificationStaffPage> {
 
 class NotificationCard extends StatelessWidget {
   final NotificationData notification;
+  // ignore: use_key_in_widget_constructors
   const NotificationCard({required this.notification});
 
   @override
@@ -152,6 +153,7 @@ class NotificationCard extends StatelessWidget {
             width: 32,
             height: 32,
             decoration: BoxDecoration(
+              // ignore: deprecated_member_use
               color: statusColor.withOpacity(0.1),
               borderRadius: BorderRadius.circular(16),
             ),

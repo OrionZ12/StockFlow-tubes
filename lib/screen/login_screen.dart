@@ -2,17 +2,65 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../config/routes.dart';
 import 'package:flutter/gestures.dart';
+import 'package:google_sign_in/google_sign_in.dart';
+import 'package:provider/provider.dart';
+import '../provider/auth_provider.dart' as auth_prov;
 
-class LoginScreen extends StatelessWidget {
+class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
+
+  @override
+  State<LoginScreen> createState() => _LoginScreenState();
+}
+
+class _LoginScreenState extends State<LoginScreen> {
+  bool _isGoogleSigningIn = false;
+
+  Future<void> _handleGoogleSignIn(BuildContext context) async {
+    try {
+      setState(() => _isGoogleSigningIn = true);
+
+      final GoogleSignIn googleSignIn = GoogleSignIn();
+      final GoogleSignInAccount? googleUser = await googleSignIn.signIn();
+
+      if (googleUser != null) {
+        // ignore: use_build_context_synchronously
+        final authProvider = context.read<auth_prov.AuthProvider>();
+        await authProvider.signInWithGoogle(googleUser);
+
+        if (mounted) {
+          // ignore: use_build_context_synchronously
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Selamat datang, ${googleUser.email}!'),
+              backgroundColor: Colors.green,
+            ),
+          );
+          // ignore: use_build_context_synchronously
+          context.go(AppRoutes.home);
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        // ignore: use_build_context_synchronously
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Gagal masuk: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isGoogleSigningIn = false);
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final nameController = TextEditingController();
     final passwordController = TextEditingController();
-
-    final screenWidth = MediaQuery.of(context).size.width;
-    final screenHeight = MediaQuery.of(context).size.height;
 
     return Scaffold(
       backgroundColor: const Color(0xFFEAF2FF),
@@ -31,7 +79,6 @@ class LoginScreen extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-
                     /// TOP SPACING (responsif)
                     SizedBox(height: topSpacing.clamp(60, 150)),
 
@@ -47,15 +94,6 @@ class LoginScreen extends StatelessWidget {
                     ),
 
                     const SizedBox(height: 30),
-
-                    Text(
-                      "Masuk ke akun anda",
-                      style: TextStyle(
-                        fontWeight: FontWeight.w600,
-                        fontSize: inputFont.clamp(14, 18),
-                      ),
-                    ),
-                    const SizedBox(height: 12),
 
                     /// USERNAME FIELD
                     TextField(
@@ -113,6 +151,83 @@ class LoginScreen extends StatelessWidget {
                           ),
                         ),
                       ),
+                    ),
+
+                    const SizedBox(height: 16),
+
+                    /// GOOGLE SIGN IN BUTTON
+                    SizedBox(
+                      width: double.infinity,
+                      height: 48,
+                      child: _isGoogleSigningIn
+                          ? ElevatedButton(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.grey.shade300,
+                                elevation: 0,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(6),
+                                  side: const BorderSide(
+                                    color: Color(0xFFDADADA),
+                                  ),
+                                ),
+                              ),
+                              onPressed: null,
+                              child: const SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2.5,
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                    Color(0xFF4285F4),
+                                  ),
+                                ),
+                              ),
+                            )
+                          : ElevatedButton.icon(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.white,
+                                foregroundColor: Colors.black87,
+                                elevation: 1,
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 16.0,
+                                  vertical: 12.0,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(6),
+                                  side: const BorderSide(
+                                    color: Color(0xFFDADADA),
+                                    width: 1,
+                                  ),
+                                ),
+                              ),
+                              onPressed: () => _handleGoogleSignIn(context),
+                              icon: Container(
+                                width: 20,
+                                height: 20,
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(2),
+                                ),
+                                child: const Center(
+                                  child: Text(
+                                    'G',
+                                    style: TextStyle(
+                                      color: Color(0xFF4285F4),
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              label: Text(
+                                "Sign in with Google",
+                                style: TextStyle(
+                                  color: Colors.black87,
+                                  fontSize: inputFont.clamp(13, 16),
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ),
                     ),
 
                     const SizedBox(height: 12),
