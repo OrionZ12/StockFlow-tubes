@@ -3,7 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:tubes/screen/history_screen.dart';
 import 'package:tubes/screen/notification_screen.dart';
 import 'package:tubes/screen/profile_screen.dart';
-import 'package:tubes/screen/account_screen.dart';
+import 'package:tubes/screen/account_screen.dart';  // Pastikan ini ada dan benar diimport
 
 import '../screen/splash_screen.dart';
 import '../screen/firstime_screen.dart';
@@ -22,12 +22,12 @@ class AppRoutes {
   static const String history = '/history';
   static const String notification = '/notification';
   static const String profile = '/profile';
-  static const String account = '/account';
+  static const String account = '/account';  // Rute untuk AccountPage
 }
 
 GoRouter createRouter() {
   final GlobalKey<NavigatorState> rootNavigatorKey =
-      GlobalKey<NavigatorState>();
+  GlobalKey<NavigatorState>();
 
   return GoRouter(
     navigatorKey: rootNavigatorKey,
@@ -66,7 +66,7 @@ GoRouter createRouter() {
       GoRoute(
         path: AppRoutes.history,
         name: 'history',
-        builder: (context, state) => RiwayatPage(),
+        builder: (context, state) => const RiwayatPage(),
       ),
       GoRoute(
         path: AppRoutes.notification,
@@ -81,7 +81,7 @@ GoRouter createRouter() {
       GoRoute(
         path: AppRoutes.account,
         name: 'account',
-        builder: (context, state) => const AccountPage(),
+        builder: (context, state) => const AccountPage(),  // Pastikan AccountPage sudah ada di screen/account_screen.dart
       ),
     ],
     errorBuilder: (context, state) => Scaffold(

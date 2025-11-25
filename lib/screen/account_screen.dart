@@ -1,70 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import '../widget/bottom_nav_bar.dart';
 
-class AccountPage extends StatefulWidget {
-  const AccountPage({super.key});
-
-  @override
-  State<AccountPage> createState() => _AccountPageState();
-}
-
-class _AccountPageState extends State<AccountPage> {
-  int _selectedIndex = 2; 
-
-  final TextEditingController _nameController = TextEditingController(
-    text: 'Jusmin Suliyana',
-  );
-  final TextEditingController _idController = TextEditingController(
-    text: '2341601011',
-  );
-  final TextEditingController _departmentController = TextEditingController(
-    text: 'Jurusan',
-  );
-  final TextEditingController _phoneController = TextEditingController(
-    text: '8xx',
-  );
-  final TextEditingController _emailController = TextEditingController(
-    text: 'justminsuaiyaa1255@gmail.com',
-  );
-
-  void _onNavTap(int index) {
-    if (index == _selectedIndex) return;
-    setState(() => _selectedIndex = index);
-    switch (index) {
-      case 0:
-        context.go('/home');
-        break;
-      case 1:
-        context.go('/history');
-        break;
-      case 2:
-        context.go('/profile');
-        break;
-    }
-  }
-
-  @override
-  void dispose() {
-    _nameController.dispose();
-    _idController.dispose();
-    _departmentController.dispose();
-    _phoneController.dispose();
-    _emailController.dispose();
-    super.dispose();
-  }
+class AccountPage extends StatelessWidget {
+  const AccountPage({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xffe3efff),
+      backgroundColor: const Color(0xFFE6EDFE),
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Header: Back button + StockFlow title
+              // 🔙 tombol kembali + judul StockFlow
               Row(
                 children: [
                   GestureDetector(
@@ -72,7 +22,7 @@ class _AccountPageState extends State<AccountPage> {
                     child: Container(
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
-                        color: const Color(0xff5a78c9),
+                        color: const Color(0xFF5A6ACF),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: const Icon(Icons.arrow_back, color: Colors.white),
@@ -82,39 +32,45 @@ class _AccountPageState extends State<AccountPage> {
                   const Text(
                     "Stock",
                     style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: Color.fromARGB(255, 0, 0, 0),
-                    ),
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black),
                   ),
                   const Text(
                     "Flow",
                     style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: Color(0xff5a78c9),
-                    ),
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF5A6ACF)),
                   ),
                 ],
               ),
 
               const SizedBox(height: 20),
 
-              // Form fields
               Expanded(
                 child: SingleChildScrollView(
                   child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _buildFormField("Nama", _nameController),
-                      const SizedBox(height: 12),
-                      _buildFormField("ID", _idController),
-                      const SizedBox(height: 12),
-                      _buildFormField("Jurusan", _departmentController),
-                      const SizedBox(height: 12),
-                      _buildFormField("Email & No. HP", _emailController),
-                      const SizedBox(height: 12),
-                      _buildFormField(null, _phoneController),
+                    children: const [
+                      AccountCard(
+                        label: "Nama",
+                        value: "Jason Sanjaya",
+                      ),
+                      SizedBox(height: 12),
+                      AccountCard(
+                        label: "ID",
+                        value: "231401066",
+                      ),
+                      SizedBox(height: 12),
+                      AccountCard(
+                        label: "Jabatan",
+                        value: "Staff",
+                      ),
+                      SizedBox(height: 12),
+                      AccountCard(
+                        label: "Email & No. HP",
+                        value: "jasonsanjaya1503@gmail.com",
+                      ),
                     ],
                   ),
                 ),
@@ -123,56 +79,100 @@ class _AccountPageState extends State<AccountPage> {
           ),
         ),
       ),
-      bottomNavigationBar: BottomNavBar(
-        currentIndex: _selectedIndex,
-        onTap: _onNavTap,
+
+      // 🔵 bottom navbar
+      bottomNavigationBar: Container(
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black12,
+              blurRadius: 4,
+              offset: Offset(0, -2),
+            ),
+          ],
+        ),
+        child: BottomNavigationBar(
+          currentIndex: 2,
+          selectedItemColor: const Color(0xFF5A6ACF),
+          unselectedItemColor: Colors.black54,
+          showUnselectedLabels: true,
+          onTap: (i) {
+            if (i == 0) context.go('/home');
+            if (i == 1) context.go('/history');
+            if (i == 2) context.go('/profile');
+          },
+          items: const [
+            BottomNavigationBarItem(
+              icon: Icon(Icons.home_outlined),
+              label: "Beranda",
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.history),
+              label: "Riwayat",
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.person),
+              label: "Profil",
+            )
+          ],
+        ),
       ),
     );
   }
+}
 
-  Widget _buildFormField(String? label, TextEditingController controller) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        if (label != null) ...[
+class AccountCard extends StatelessWidget {
+  final String label;
+  final String value;
+
+  const AccountCard({
+    Key? key,
+    required this.label,
+    required this.value,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(18),
+        boxShadow: const [
+          BoxShadow(
+            color: Colors.black12,
+            blurRadius: 4,
+            offset: Offset(0, 2),
+          )
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(label,
+              style: const TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w500,
+                color: Colors.black87,
+              )),
+          const SizedBox(height: 4),
+          Container(
+            height: 1,
+            width: double.infinity,
+            color: Colors.grey.shade300,
+          ),
+          const SizedBox(height: 4),
           Text(
-            label,
+            value,
             style: const TextStyle(
               fontSize: 12,
+              color: Color(0xFF4A5ACF),
               fontWeight: FontWeight.w500,
-              color: Color(0xff474747),
             ),
           ),
-          const SizedBox(height: 6),
         ],
-        Container(
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(15),
-            border: Border.all(color: const Color(0xffd3dbed), width: 1),
-            boxShadow: const [
-              BoxShadow(
-                color: Colors.black12,
-                blurRadius: 4,
-                offset: Offset(0, 1),
-              ),
-            ],
-          ),
-          child: TextField(
-            controller: controller,
-            readOnly: true,
-            decoration: const InputDecoration(
-              contentPadding: EdgeInsets.symmetric(
-                horizontal: 16,
-                vertical: 12,
-              ),
-              border: InputBorder.none,
-              hintStyle: TextStyle(fontSize: 13, color: Color(0xff929292)),
-            ),
-            style: const TextStyle(fontSize: 13, color: Color(0xff474747)),
-          ),
-        ),
-      ],
+      ),
     );
   }
 }
