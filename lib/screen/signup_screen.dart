@@ -14,6 +14,7 @@ class SignUpScreen extends StatefulWidget {
 
 class _SignUpScreenState extends State<SignUpScreen> {
   // Controller
+  final nameCtrl = TextEditingController();
   final emailCtrl = TextEditingController();
   final passCtrl = TextEditingController();
   final confirmCtrl = TextEditingController();
@@ -26,6 +27,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
   // PERBAIKAN 1: Dispose Controller untuk mencegah memory leak
   @override
   void dispose() {
+    nameCtrl.dispose();
     emailCtrl.dispose();
     passCtrl.dispose();
     confirmCtrl.dispose();
@@ -65,6 +67,24 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
                     const SizedBox(height: 30),
 
+                    // FULL NAME FIELD
+                    TextField(
+                      controller: nameCtrl,
+                      style: TextStyle(fontSize: inputFont),
+                      keyboardType: TextInputType.name,
+                      decoration: const InputDecoration(
+                        hintText: "Masukkan nama lengkap",
+                        filled: true,
+                        fillColor: Colors.white,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.all(Radius.circular(8)),
+                          borderSide: BorderSide.none,
+                        ),
+                      ),
+                    ),
+
+                    SizedBox(height: fieldSpacing),
+
                     // EMAIL FIELD
                     TextField(
                       controller: emailCtrl,
@@ -100,8 +120,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           icon: Icon(
                             showPass ? Icons.visibility_off : Icons.visibility,
                           ),
-                          onPressed: () =>
-                              setState(() => showPass = !showPass),
+                          onPressed: () => setState(() => showPass = !showPass),
                         ),
                       ),
                     ),
@@ -150,21 +169,21 @@ class _SignUpScreenState extends State<SignUpScreen> {
                         ),
                         child: loading
                             ? const SizedBox(
-                          height: 20,
-                          width: 20,
-                          child: CircularProgressIndicator(
-                            color: Colors.white,
-                            strokeWidth: 2,
-                          ),
-                        )
+                                height: 20,
+                                width: 20,
+                                child: CircularProgressIndicator(
+                                  color: Colors.white,
+                                  strokeWidth: 2,
+                                ),
+                              )
                             : Text(
-                          "Daftar",
-                          style: TextStyle(
-                            fontSize: inputFont.clamp(14, 20),
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
+                                "Daftar",
+                                style: TextStyle(
+                                  fontSize: inputFont.clamp(14, 20),
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
                       ),
                     ),
 
@@ -209,11 +228,16 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
   // LOGIKA UTAMA (DIPISAH SUPAYA RAPI)
   Future<void> _handleSignUp() async {
+    final name = nameCtrl.text.trim();
     final email = emailCtrl.text.trim();
     final pass = passCtrl.text.trim();
     final conf = confirmCtrl.text.trim();
 
     // 1. Validasi Input Dasar
+    if (name.isEmpty) {
+      showError("Nama lengkap wajib diisi");
+      return;
+    }
     if (email.isEmpty || pass.isEmpty || conf.isEmpty) {
       showError("Semua field wajib diisi");
       return;
