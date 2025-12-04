@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import '../theme/app_colors.dart';
 
 class BottomNavBar extends StatelessWidget {
   final int currentIndex;
@@ -12,99 +14,64 @@ class BottomNavBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
+    double iconSize = MediaQuery.of(context).size.width * 0.065;
+    double bubbleSize = MediaQuery.of(context).size.width * 0.13;
 
-    // Responsif dengan ba tas minimal dan maksimal
-    double iconSize = (screenWidth * 0.07).clamp(22, 34);
-    double fontSize = (screenWidth * 0.035).clamp(10, 16);
+    final items = [
+      _NavItem("Beranda", "assets/icons/home_icon.png"),
+      _NavItem("Riwayat", "assets/icons/history_icon.png"),
+      _NavItem("Profil", "assets/icons/profil_icon.png"),
+    ];
 
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 12),
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        boxShadow: [
-          BoxShadow(
-            blurRadius: 4,
-            color: Colors.black12,
-            offset: Offset(0, -2),
-          )
-        ],
-      ),
+      padding: const EdgeInsets.symmetric(vertical: 10),
+      decoration: const BoxDecoration(color: Colors.white),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children: [
-          _navItem(
-            index: 0,
-            label: "Beranda",
-            iconPath: "assets/icons/home_icon.png",
-            isActive: currentIndex == 0,
-            iconSize: iconSize,
-            fontSize: fontSize,
-          ),
-          _navItem(
-            index: 1,
-            label: "Riwayat",
-            iconPath: "assets/icons/history_icon.png",
-            isActive: currentIndex == 1,
-            iconSize: iconSize,
-            fontSize: fontSize,
-          ),
-          _navItem(
-            index: 2,
-            label: "Profil",
-            iconPath: "assets/icons/profil_icon.png",
-            isActive: currentIndex == 2,
-            iconSize: iconSize,
-            fontSize: fontSize,
-          ),
-        ],
+        children: List.generate(items.length, (i) {
+          final isActive = currentIndex == i;
+          return GestureDetector(
+            onTap: () => onTap(i),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: bubbleSize,
+                  height: bubbleSize,
+                  decoration: BoxDecoration(
+                    color: isActive ? AppColors.blueSoft : Colors.transparent,
+                    borderRadius: BorderRadius.circular(50),
+                  ),
+                  child: Center(
+                    child: Image.asset(
+                      items[i].icon,
+                      width: iconSize,
+                      color: isActive ? Colors.white : Colors.black87,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  items[i].label,
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight:
+                    isActive ? FontWeight.w600 : FontWeight.w400,
+                    color:
+                    isActive ? AppColors.blueMedium : Colors.black87,
+                  ),
+                )
+              ],
+            ),
+          );
+        }),
       ),
     );
   }
+}
 
-  Widget _navItem({
-    required int index,
-    required String label,
-    required String iconPath,
-    required bool isActive,
-    required double iconSize,
-    required double fontSize,
-  }) {
-    return GestureDetector(
-      onTap: () => onTap(index),
-      child: Container(
-        width: 85, // untuk keseimbangan tampilan, tetap responsif di dalamnya
-        padding: const EdgeInsets.symmetric(vertical: 6),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: isActive
-                  ? BoxDecoration(
-                color: Colors.blue.shade200,
-                borderRadius: BorderRadius.circular(20),
-              )
-                  : null,
-              child: Image.asset(
-                iconPath,
-                width: iconSize,
-                height: iconSize,
-                color: isActive ? Colors.black : Colors.black87,
-              ),
-            ),
-            const SizedBox(height: 3),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: fontSize,
-                color: isActive ? Colors.black : Colors.black87,
-                fontWeight: isActive ? FontWeight.w600 : FontWeight.normal,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+class _NavItem {
+  final String label;
+  final String icon;
+  _NavItem(this.label, this.icon);
 }

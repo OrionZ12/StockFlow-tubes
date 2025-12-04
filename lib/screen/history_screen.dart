@@ -1,266 +1,149 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
+import '../theme/app_colors.dart';
 
-class RiwayatPage extends StatefulWidget {
-  const RiwayatPage({super.key});
+class HistoryPage extends StatelessWidget {
+  const HistoryPage({super.key});
 
-  @override
-  State<RiwayatPage> createState() => _RiwayatPageState();
-}
-
-class _RiwayatPageState extends State<RiwayatPage> {
-  int _selectedIndex = 1; // "Riwayat" aktif
-
-  final Map<int, List<String>> data = {
-    2025: [
-      "Oktober",
-      "September",
-      "Agustus",
-      "Juli",
-      "Juni",
-      "Mei",
-      "April",
-      "Maret",
-      "Februari",
-      "Januari",
-    ],
-    2024: [
-      "Desember",
-      "November",
-      "Oktober",
-      "September",
-      "Agustus",
-    ],
-  };
-
-  // =============== BOTTOM NAV ACTION ==================
-
-  void _onNavTap(int index) {
-    if (index == _selectedIndex) return;
-
-    setState(() => _selectedIndex = index);
-
-    switch (index) {
-      case 0:
-        context.go('/home');
-        break;
-      case 1:
-        context.go('/history');
-        break;
-      case 2:
-        context.go('/profile'); // kalau belum ada, buat nanti
-        break;
-    }
-  }
-
-  // =============== RESPONSIVE BOTTOM NAVBAR ===============
-
-  Widget buildNavbar(BuildContext context) {
-    double iconSize = MediaQuery.of(context).size.width * 0.065;
-    double bubbleSize = MediaQuery.of(context).size.width * 0.12;
-
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 10),
-      decoration: const BoxDecoration(color: Colors.white),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children: [
-          navItem(context, 0, "Beranda", "assets/icons/home_icon.png",
-              iconSize, bubbleSize),
-          navItem(context, 1, "Riwayat", "assets/icons/history_icon.png",
-              iconSize, bubbleSize),
-          navItem(context, 2, "Profil", "assets/icons/profil_icon.png",
-              iconSize, bubbleSize),
-        ],
-      ),
-    );
-  }
-
-  Widget navItem(BuildContext context, int index, String label, String iconPath,
-      double iconSize, double bubbleSize) {
-    bool isActive = _selectedIndex == index;
-
-    return GestureDetector(
-      onTap: () => _onNavTap(index),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          // BUBBLE + ICON
-          Container(
-            width: bubbleSize,
-            height: bubbleSize,
-            decoration: BoxDecoration(
-              color: isActive ? const Color(0xff7c9cff) : Colors.transparent,
-              borderRadius: BorderRadius.circular(50),
-            ),
-            child: Center(
-              child: Image.asset(
-                iconPath,
-                width: iconSize,
-                height: iconSize,
-                color: isActive ? Colors.white : Colors.black87,
-              ),
-            ),
-          ),
-          const SizedBox(height: 4),
-
-          // LABEL
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 13,
-              fontWeight: isActive ? FontWeight.w600 : FontWeight.w400,
-              color: isActive ? const Color(0xff5a78c9) : Colors.black87,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // ===========================================================
+  final List<Map<String, dynamic>> historyItems = const [
+    {
+      "title": "Barang Masuk",
+      "desc": "Menambahkan 30 unit Mouse Wireless",
+      "date": "4 Jan 2025"
+    },
+    {
+      "title": "Barang Keluar",
+      "desc": "Mengeluarkan 5 unit Keyboard Gaming",
+      "date": "4 Jan 2025"
+    },
+    {
+      "title": "Stok Diupdate",
+      "desc": "Monitor LED ditambah 12 unit",
+      "date": "3 Jan 2025"
+    },
+  ];
 
   @override
   Widget build(BuildContext context) {
-    double titleSize = MediaQuery.of(context).size.width * 0.055;
-
-    return Scaffold(
-      backgroundColor: const Color(0xffe3efff),
-
-      // =========== BODY =============
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  GestureDetector(
-                    onTap: () => context.go('/home'),
-                    child: Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: const Color(0xff5a78c9),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: const Icon(Icons.arrow_back, color: Colors.white),
-                    ),
+    return Container(
+      color: AppColors.pageBackground,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // 🔵 HEADER (pengganti AppBar, aman tanpa Scaffold)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(18, 40, 18, 10),
+            child: Row(
+              children: const [
+                Text(
+                  "Stock",
+                  style: TextStyle(
+                    color: AppColors.textPrimary,
+                    fontSize: 19,
+                    fontWeight: FontWeight.bold,
                   ),
-                  const Spacer(),
-                  const Text(
-                    "Stock",
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: Color.fromARGB(255, 0, 0, 0),
-                    ),
-                  ),
-                  const Text(
-                    "Flow",
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: Color(0xff5a78c9),
-                    ),
-                  )
-                ],
-              ),
-
-              const SizedBox(height: 20),
-
-              Text(
-                "Riwayat Aktivitas",
-                style: TextStyle(
-                  fontSize: titleSize,
-                  fontWeight: FontWeight.bold,
                 ),
-              ),
-
-              const SizedBox(height: 20),
-
-              Expanded(child: buildTimeline()),
-            ],
+                Text(
+                  "Flow",
+                  style: TextStyle(
+                    color: AppColors.blueMain,
+                    fontSize: 19,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
           ),
-        ),
+
+          // 🔵 LIST DATA
+          Expanded(
+            child: ListView.builder(
+              padding: const EdgeInsets.symmetric(horizontal: 18),
+              itemCount: historyItems.length,
+              itemBuilder: (context, index) {
+                final item = historyItems[index];
+                final isLast = index == historyItems.length - 1;
+
+                return Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // --- Bullet timeline
+                    Column(
+                      children: [
+                        Container(
+                          width: 18,
+                          height: 18,
+                          decoration: BoxDecoration(
+                            color: AppColors.blueSoft,
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                        ),
+                        if (!isLast)
+                          Container(
+                            width: 3,
+                            height: 70,
+                            color: AppColors.blueSoft,
+                          ),
+                      ],
+                    ),
+
+                    const SizedBox(width: 15),
+
+                    // --- Card
+                    Expanded(
+                      child: Container(
+                        margin: const EdgeInsets.only(bottom: 20),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 18, vertical: 16),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(18),
+                          border: Border.all(color: AppColors.softBorder),
+                          boxShadow: const [
+                            BoxShadow(
+                              color: Colors.black12,
+                              blurRadius: 4,
+                              offset: Offset(0, 1),
+                            )
+                          ],
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              item["title"],
+                              style: const TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w600,
+                                color: AppColors.textPrimary,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              item["desc"],
+                              style: const TextStyle(
+                                fontSize: 13,
+                                color: AppColors.textSecondary,
+                              ),
+                            ),
+                            const SizedBox(height: 10),
+                            Text(
+                              item["date"],
+                              style: const TextStyle(
+                                fontSize: 12,
+                                color: AppColors.textMuted,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                );
+              },
+            ),
+          ),
+        ],
       ),
-
-      // ========== BOTTOM NAVBAR ==========
-      bottomNavigationBar: buildNavbar(context),
-    );
-  }
-
-  // ========== TIMELINE ==========
-
-  Widget buildTimeline() {
-    return ListView(
-      children: data.entries.map((entry) {
-        int year = entry.key;
-        List<String> months = entry.value;
-
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              "$year",
-              style: const TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-
-            // List bulan
-            Column(
-              children: months.map((month) => buildTimelineItem(month)).toList(),
-            ),
-
-            const SizedBox(height: 25),
-          ],
-        );
-      }).toList(),
-    );
-  }
-
-  Widget buildTimelineItem(String month) {
-    return Row(
-      children: [
-        Column(
-          children: [
-            Container(
-              width: 2,
-              height: 20,
-              color: const Color(0xff5a78c9),
-            ),
-            Container(
-              width: 10,
-              height: 10,
-              decoration: const BoxDecoration(
-                color: Color(0xff5a78c9),
-                shape: BoxShape.circle,
-              ),
-            ),
-          ],
-        ),
-
-        const SizedBox(width: 15),
-
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-          margin: const EdgeInsets.symmetric(vertical: 6),
-          decoration: BoxDecoration(
-            color: const Color(0xff5a78c9),
-            borderRadius: BorderRadius.circular(15),
-          ),
-          child: Text(
-            month,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        )
-      ],
     );
   }
 }

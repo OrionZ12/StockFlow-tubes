@@ -68,7 +68,7 @@ GoRouter createRouter() {
       GoRoute(
         path: AppRoutes.history,
         builder: (context, state) =>
-        const AppScaffold(child: RiwayatPage()),
+        const AppScaffold(child: HistoryPage()),
       ),
       GoRoute(
         path: AppRoutes.notification,
