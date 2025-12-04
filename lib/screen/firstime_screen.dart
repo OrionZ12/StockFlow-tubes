@@ -78,7 +78,7 @@ class FirstTimeScreen extends StatelessWidget {
                       SizedBox(
                         width: buttonWidth.clamp(180, 260),
                         child: OutlinedButton(
-                          onPressed: () => context.go(AppRoutes.signIn),
+                          onPressed: () => context.go(AppRoutes.signUp),
                           style: OutlinedButton.styleFrom(
                             side: BorderSide(color: Colors.blue.shade300),
                             foregroundColor: Colors.blue.shade300,

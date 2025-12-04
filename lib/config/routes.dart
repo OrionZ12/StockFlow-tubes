@@ -13,13 +13,13 @@ import '../screen/signsuc_screen.dart';
 import '../screen/home_screen.dart';
 import '../widget/app_scaffold.dart';
 
-
-
 class AppRoutes {
   static const String splash = '/splash';
   static const String firstTime = '/firstime';
   static const String login = '/login';
-  static const String signIn = '/signin';
+  // HAPUS BARIS INI KARENA TIDAK DIPAKAI DAN BIKIN ERROR:
+  // static const String signIn = '/signin';
+
   static const String signSuccess = '/signsuccess';
   static const String home = '/home';
   static const String history = '/history';
@@ -41,6 +41,7 @@ GoRouter createRouter() {
         path: AppRoutes.splash,
         builder: (context, state) => const SplashScreen(),
       ),
+      // Rute SignUp sudah benar ada di sini
       GoRoute(
         path: AppRoutes.signUp,
         builder: (context, state) => const SignUpScreen(),
@@ -58,7 +59,7 @@ GoRouter createRouter() {
         builder: (context, state) => const SuccessScreen(),
       ),
 
-      // ========== SCREEN UTAMA DIBUNGKUS AppScaffold ==========
+      // ========== SCREEN UTAMA ==========
       GoRoute(
         path: AppRoutes.home,
         builder: (context, state) =>

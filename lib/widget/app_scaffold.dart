@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-
 import '../widget/bottom_nav_bar.dart';
 import '../config/routes.dart';
 
@@ -12,34 +11,28 @@ class AppScaffold extends StatelessWidget {
   int _indexFromLocation(String location) {
     if (location.startsWith(AppRoutes.history)) return 1;
     if (location.startsWith(AppRoutes.profile)) return 2;
-    return 0;
+    return 0; // default: home
   }
 
   void _onNavTap(BuildContext context, int index) {
     switch (index) {
       case 0:
-        if ((GoRouter.of(context) as dynamic).location != AppRoutes.home) {
-          context.go(AppRoutes.home);
-        }
+        context.go(AppRoutes.home);
         break;
       case 1:
-        if ((GoRouter.of(context) as dynamic).location != AppRoutes.history) {
-          context.go(AppRoutes.history);
-        }
+        context.go(AppRoutes.history);
         break;
       case 2:
-        if ((GoRouter.of(context) as dynamic).location != AppRoutes.profile) {
-          context.go(AppRoutes.profile);
-        }
+        context.go(AppRoutes.profile);
         break;
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    // Ambil location dengan aman: coba GoRouter, fallback ke Uri.base.path
-    final router = GoRouter.of(context);
-    final String location = ((router as dynamic).location as String?) ?? Uri.base.path;
+    // Ambil lokasi rute dari GoRouterState
+    final state = GoRouterState.of(context);
+    final location = state.uri.toString();
 
     final currentIndex = _indexFromLocation(location);
 
@@ -47,7 +40,7 @@ class AppScaffold extends StatelessWidget {
       body: child,
       bottomNavigationBar: BottomNavBar(
         currentIndex: currentIndex,
-        onTap: (index) => _onNavTap(context, index),
+        onTap: (i) => _onNavTap(context, i),
       ),
     );
   }

@@ -13,13 +13,24 @@ class SignUpScreen extends StatefulWidget {
 }
 
 class _SignUpScreenState extends State<SignUpScreen> {
+  // Controller
   final emailCtrl = TextEditingController();
   final passCtrl = TextEditingController();
   final confirmCtrl = TextEditingController();
 
+  // State
   bool showPass = true;
   bool showConfirm = true;
   bool loading = false;
+
+  // PERBAIKAN 1: Dispose Controller untuk mencegah memory leak
+  @override
+  void dispose() {
+    emailCtrl.dispose();
+    passCtrl.dispose();
+    confirmCtrl.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -28,6 +39,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
       body: SafeArea(
         child: LayoutBuilder(
           builder: (context, constraints) {
+            // Responsiveness settings
             double titleFont = constraints.maxWidth * 0.06;
             double inputFont = constraints.maxWidth * 0.04;
             double topSpacing = constraints.maxHeight * 0.12;
@@ -53,10 +65,11 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
                     const SizedBox(height: 30),
 
-                    // EMAIL
+                    // EMAIL FIELD
                     TextField(
                       controller: emailCtrl,
                       style: TextStyle(fontSize: inputFont),
+                      keyboardType: TextInputType.emailAddress,
                       decoration: InputDecoration(
                         hintText: "Masukkan email anda",
                         filled: true,
@@ -70,7 +83,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
                     SizedBox(height: fieldSpacing),
 
-                    // PASSWORD
+                    // PASSWORD FIELD
                     TextField(
                       controller: passCtrl,
                       obscureText: showPass,
@@ -95,7 +108,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
                     SizedBox(height: fieldSpacing),
 
-                    // CONFIRM PASSWORD
+                    // CONFIRM PASSWORD FIELD
                     TextField(
                       controller: confirmCtrl,
                       obscureText: showConfirm,
@@ -126,38 +139,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     SizedBox(
                       width: double.infinity,
                       child: ElevatedButton(
-                        onPressed: loading
-                            ? null
-                            : () async {
-                          final email = emailCtrl.text.trim();
-                          final pass = passCtrl.text.trim();
-                          final conf = confirmCtrl.text.trim();
-
-                          if (email.isEmpty ||
-                              pass.isEmpty ||
-                              conf.isEmpty) {
-                            showError("Semua field wajib diisi");
-                            return;
-                          }
-                          if (pass != conf) {
-                            showError("Konfirmasi password tidak cocok");
-                            return;
-                          }
-
-                          setState(() => loading = true);
-
-                          final auth = context.read<AuthProvider>();
-                          final result =
-                          await auth.signUpWithEmail(email, pass);
-
-                          setState(() => loading = false);
-
-                          if (result == "success") {
-                            context.go(AppRoutes.signSuccess);
-                          } else {
-                            showError(result!);
-                          }
-                        },
+                        // Disable tombol saat loading
+                        onPressed: loading ? null : _handleSignUp,
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.blue.shade700,
                           padding: const EdgeInsets.symmetric(vertical: 14),
@@ -166,8 +149,13 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           ),
                         ),
                         child: loading
-                            ? const CircularProgressIndicator(
-                          color: Colors.white,
+                            ? const SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(
+                            color: Colors.white,
+                            strokeWidth: 2,
+                          ),
                         )
                             : Text(
                           "Daftar",
@@ -182,7 +170,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
                     const SizedBox(height: 18),
 
-                    // SIGN IN TEXT — highlight only "Masuk disini"
+                    // SIGN IN TEXT
                     Center(
                       child: RichText(
                         text: TextSpan(
@@ -200,8 +188,10 @@ class _SignUpScreenState extends State<SignUpScreen> {
                                 decoration: TextDecoration.underline,
                               ),
                               recognizer: TapGestureRecognizer()
-                                ..onTap = () =>
-                                    context.go(AppRoutes.login),
+                                ..onTap = () {
+                                  // Pastikan rute ini ada di routes.dart
+                                  context.go(AppRoutes.login);
+                                },
                             ),
                           ],
                         ),
@@ -217,9 +207,63 @@ class _SignUpScreenState extends State<SignUpScreen> {
     );
   }
 
+  // LOGIKA UTAMA (DIPISAH SUPAYA RAPI)
+  Future<void> _handleSignUp() async {
+    final email = emailCtrl.text.trim();
+    final pass = passCtrl.text.trim();
+    final conf = confirmCtrl.text.trim();
+
+    // 1. Validasi Input Dasar
+    if (email.isEmpty || pass.isEmpty || conf.isEmpty) {
+      showError("Semua field wajib diisi");
+      return;
+    }
+
+    // 2. Validasi Password Match
+    if (pass != conf) {
+      showError("Konfirmasi password tidak cocok");
+      return;
+    }
+
+    // 3. Validasi Panjang Password (Firebase butuh min 6)
+    if (pass.length < 6) {
+      showError("Password minimal 6 karakter");
+      return;
+    }
+
+    // Mulai Loading
+    setState(() => loading = true);
+
+    // Panggil Provider
+    final auth = context.read<AuthProvider>();
+
+    // PERBAIKAN: Menggunakan try-catch implicit via return value dari provider
+    final result = await auth.signUpWithEmail(email, pass);
+
+    // PERBAIKAN 2: Mounted check (Sangat Penting!)
+    // Jika user menekan back saat loading, kode di bawah ini tidak akan dijalankan
+    if (!mounted) return;
+
+    // Stop Loading
+    setState(() => loading = false);
+
+    // Cek Hasil
+    if (result == "success") {
+      // Jika sukses, masuk ke Home (Auto Login)
+      context.go(AppRoutes.home);
+    } else {
+      // Jika gagal, tampilkan error
+      showError(result);
+    }
+  }
+
   void showError(String msg) {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(msg), backgroundColor: Colors.red),
+      SnackBar(
+        content: Text(msg),
+        backgroundColor: Colors.red,
+        behavior: SnackBarBehavior.floating, // Lebih modern
+      ),
     );
   }
 }

@@ -17,7 +17,9 @@ class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
 
+  // State untuk loading
   bool _isGoogleSigningIn = false;
+  bool _isEmailSigningIn = false; // Tambahan untuk loading email
 
   @override
   void dispose() {
@@ -26,6 +28,7 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
+  // LOGIKA LOGIN GOOGLE
   Future<void> _handleGoogleSignIn(BuildContext context) async {
     try {
       setState(() => _isGoogleSigningIn = true);
@@ -34,7 +37,9 @@ class _LoginScreenState extends State<LoginScreen> {
       final GoogleSignInAccount? googleUser = await googleSignIn.signIn();
 
       if (googleUser != null) {
+        if (!mounted) return; // Cek mounted sebelum akses context
         final authProvider = context.read<AuthProvider>();
+
         await authProvider.signInWithGoogle(googleUser);
 
         if (mounted) {
@@ -58,6 +63,45 @@ class _LoginScreenState extends State<LoginScreen> {
       }
     } finally {
       if (mounted) setState(() => _isGoogleSigningIn = false);
+    }
+  }
+
+  // LOGIKA LOGIN EMAIL (Diperbaiki)
+  Future<void> _handleEmailLogin() async {
+    final email = emailController.text.trim();
+    final password = passwordController.text.trim();
+
+    if (email.isEmpty || password.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Email dan password harus diisi"),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+
+    setState(() => _isEmailSigningIn = true);
+
+    final auth = context.read<AuthProvider>();
+
+    // Panggil Provider
+    String? result = await auth.login(email, password);
+
+    // PENTING: Cek mounted sebelum lanjut navigasi/update UI
+    if (!mounted) return;
+
+    setState(() => _isEmailSigningIn = false);
+
+    if (result == "success") {
+      context.go(AppRoutes.home);
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("Login gagal: $result"),
+          backgroundColor: Colors.red,
+        ),
+      );
     }
   }
 
@@ -129,38 +173,14 @@ class _LoginScreenState extends State<LoginScreen> {
 
                     const SizedBox(height: 24),
 
-                    /// LOGIN BUTTON
+                    /// LOGIN BUTTON (EMAIL)
                     SizedBox(
                       width: double.infinity,
                       child: ElevatedButton(
-                        onPressed: () async {
-                          final email = emailController.text.trim();
-                          final password = passwordController.text.trim();
-
-                          if (email.isEmpty || password.isEmpty) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text("Email dan password harus diisi"),
-                              ),
-                            );
-                            return;
-                          }
-
-                          final auth = Provider.of<AuthProvider>(
-                            context,
-                            listen: false,
-                          );
-
-                          String? result = await auth.login(email, password);
-
-                          if (result == "success") {
-                            context.go(AppRoutes.home);
-                          } else {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text("Login gagal: $result")),
-                            );
-                          }
-                        },
+                        // Disable tombol saat loading google/email berlangsung
+                        onPressed: (_isEmailSigningIn || _isGoogleSigningIn)
+                            ? null
+                            : _handleEmailLogin,
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.blue.shade700,
                           foregroundColor: Colors.white,
@@ -169,7 +189,16 @@ class _LoginScreenState extends State<LoginScreen> {
                             borderRadius: BorderRadius.circular(8),
                           ),
                         ),
-                        child: Text(
+                        child: _isEmailSigningIn
+                            ? const SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(
+                            color: Colors.white,
+                            strokeWidth: 2,
+                          ),
+                        )
+                            : Text(
                           "Masuk",
                           style: TextStyle(
                             fontSize: inputFont.clamp(14, 20),
@@ -187,38 +216,45 @@ class _LoginScreenState extends State<LoginScreen> {
                       height: 48,
                       child: _isGoogleSigningIn
                           ? ElevatedButton(
-                              onPressed: null,
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.grey.shade300,
-                              ),
-                              child: const CircularProgressIndicator(),
-                            )
+                        onPressed: null,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.grey.shade300,
+                        ),
+                        child: const SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        ),
+                      )
                           : ElevatedButton.icon(
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.white,
-                                foregroundColor: Colors.black87,
-                                elevation: 1,
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 16.0,
-                                  vertical: 12.0,
-                                ),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(6),
-                                  side: const BorderSide(
-                                    color: Color(0xFFDADADA),
-                                    width: 1,
-                                  ),
-                                ),
-                              ),
-                              onPressed: () => _handleGoogleSignIn(context),
-                              icon: const Icon(Icons.login, size: 20),
-                              label: Text(
-                                "Sign in dengan Google",
-                                style: TextStyle(
-                                  fontSize: inputFont.clamp(13, 16),
-                                ),
-                              ),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.white,
+                          foregroundColor: Colors.black87,
+                          elevation: 1,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16.0,
+                            vertical: 12.0,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(6),
+                            side: const BorderSide(
+                              color: Color(0xFFDADADA),
+                              width: 1,
                             ),
+                          ),
+                        ),
+                        // Disable google button jika sedang login email
+                        onPressed: _isEmailSigningIn
+                            ? null
+                            : () => _handleGoogleSignIn(context),
+                        icon: const Icon(Icons.login, size: 20),
+                        label: Text(
+                          "Sign in dengan Google",
+                          style: TextStyle(
+                            fontSize: inputFont.clamp(13, 16),
+                          ),
+                        ),
+                      ),
                     ),
 
                     const SizedBox(height: 12),
@@ -240,8 +276,10 @@ class _LoginScreenState extends State<LoginScreen> {
                                 decoration: TextDecoration.underline,
                               ),
                               recognizer: TapGestureRecognizer()
-                                ..onTap = () =>
-                                    context.go(AppRoutes.signIn),
+                                ..onTap = () {
+                                  // PERBAIKAN: Mengarah ke AppRoutes.signUp
+                                  context.go(AppRoutes.signUp);
+                                },
                             ),
                           ],
                         ),
