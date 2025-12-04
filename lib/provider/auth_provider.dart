@@ -31,19 +31,35 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
-  // Sign up with email and password
-  Future<void> signUpWithEmail(String email, String password) async {
-    try {
-      await _firebaseAuth.createUserWithEmailAndPassword(
-        email: email,
-        password: password,
-      );
-      notifyListeners();
-    } catch (e) {
-      debugPrint('Sign up error: $e');
-      rethrow;
-    }
+
+Future<String?> login(String email, String password) async {
+  try {
+    await _firebaseAuth.signInWithEmailAndPassword(
+      email: email,
+      password: password,
+    );
+    notifyListeners();
+    return "success";
+  } catch (e) {
+    return e.toString();
   }
+}
+
+
+  // Sign up with email and password
+Future<String?> signUpWithEmail(String email, String password) async {
+  try {
+    await _firebaseAuth.createUserWithEmailAndPassword(
+      email: email,
+      password: password, 
+    );
+    notifyListeners();
+    return "success";
+  } catch (e) {
+    return e.toString();
+  }
+}
+
 
   // Sign in with email and password
   Future<void> signInWithEmail(String email, String password) async {

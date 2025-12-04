@@ -3,7 +3,9 @@ import 'package:go_router/go_router.dart';
 import 'package:tubes/screen/history_screen.dart';
 import 'package:tubes/screen/notification_screen.dart';
 import 'package:tubes/screen/profile_screen.dart';
-import 'package:tubes/screen/account_screen.dart';  // Pastikan ini ada dan benar diimport
+import 'package:tubes/screen/account_screen.dart';  
+import 'package:tubes/screen/signup_screen.dart';
+// Pastikan ini ada dan benar diimport
 
 import '../screen/splash_screen.dart';
 import '../screen/firstime_screen.dart';
@@ -11,6 +13,9 @@ import '../screen/login_screen.dart';
 import '../screen/signin_screen.dart';
 import '../screen/signsuc_screen.dart';
 import '../screen/home_screen.dart';
+
+
+
 
 class AppRoutes {
   static const String splash = '/splash';
@@ -23,6 +28,8 @@ class AppRoutes {
   static const String notification = '/notification';
   static const String profile = '/profile';
   static const String account = '/account';  // Rute untuk AccountPage
+  static const String signUp = '/signup';
+
 }
 
 GoRouter createRouter() {
@@ -37,6 +44,11 @@ GoRouter createRouter() {
         path: AppRoutes.splash,
         name: 'splash',
         builder: (context, state) => const SplashScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.signUp,
+        name: 'signup',
+        builder: (context, state) => const SignUpScreen(),
       ),
       GoRoute(
         path: AppRoutes.firstTime,

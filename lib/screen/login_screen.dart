@@ -4,7 +4,7 @@ import '../config/routes.dart';
 import 'package:flutter/gestures.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:provider/provider.dart';
-import '../provider/auth_provider.dart' as auth_prov;
+import '../provider/auth_provider.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -14,7 +14,17 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
+  final TextEditingController emailController = TextEditingController();
+  final TextEditingController passwordController = TextEditingController();
+
   bool _isGoogleSigningIn = false;
+
+  @override
+  void dispose() {
+    emailController.dispose();
+    passwordController.dispose();
+    super.dispose();
+  }
 
   Future<void> _handleGoogleSignIn(BuildContext context) async {
     try {
@@ -24,25 +34,21 @@ class _LoginScreenState extends State<LoginScreen> {
       final GoogleSignInAccount? googleUser = await googleSignIn.signIn();
 
       if (googleUser != null) {
-        // ignore: use_build_context_synchronously
-        final authProvider = context.read<auth_prov.AuthProvider>();
+        final authProvider = context.read<AuthProvider>();
         await authProvider.signInWithGoogle(googleUser);
 
         if (mounted) {
-          // ignore: use_build_context_synchronously
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text('Selamat datang, ${googleUser.email}!'),
               backgroundColor: Colors.green,
             ),
           );
-          // ignore: use_build_context_synchronously
           context.go(AppRoutes.home);
         }
       }
     } catch (e) {
       if (mounted) {
-        // ignore: use_build_context_synchronously
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Gagal masuk: $e'),
@@ -51,23 +57,18 @@ class _LoginScreenState extends State<LoginScreen> {
         );
       }
     } finally {
-      if (mounted) {
-        setState(() => _isGoogleSigningIn = false);
-      }
+      if (mounted) setState(() => _isGoogleSigningIn = false);
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final nameController = TextEditingController();
-    final passwordController = TextEditingController();
-
     return Scaffold(
       backgroundColor: const Color(0xFFEAF2FF),
       body: SafeArea(
         child: LayoutBuilder(
           builder: (context, constraints) {
-            double titleFont = constraints.maxWidth * 0.06; // responsive title
+            double titleFont = constraints.maxWidth * 0.06;
             double inputFont = constraints.maxWidth * 0.04;
 
             double topSpacing = constraints.maxHeight * 0.12;
@@ -79,10 +80,8 @@ class _LoginScreenState extends State<LoginScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    /// TOP SPACING (responsif)
                     SizedBox(height: topSpacing.clamp(60, 150)),
 
-                    /// TITLE
                     Center(
                       child: Text(
                         "Selamat Datang!",
@@ -95,12 +94,12 @@ class _LoginScreenState extends State<LoginScreen> {
 
                     const SizedBox(height: 30),
 
-                    /// USERNAME FIELD
+                    /// EMAIL FIELD
                     TextField(
-                      controller: nameController,
+                      controller: emailController,
                       style: TextStyle(fontSize: inputFont),
                       decoration: const InputDecoration(
-                        hintText: "Masukkan nama anda",
+                        hintText: "Masukkan email",
                         filled: true,
                         fillColor: Colors.white,
                         border: OutlineInputBorder(
@@ -134,7 +133,34 @@ class _LoginScreenState extends State<LoginScreen> {
                     SizedBox(
                       width: double.infinity,
                       child: ElevatedButton(
-                        onPressed: () => context.go(AppRoutes.home),
+                        onPressed: () async {
+                          final email = emailController.text.trim();
+                          final password = passwordController.text.trim();
+
+                          if (email.isEmpty || password.isEmpty) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text("Email dan password harus diisi"),
+                              ),
+                            );
+                            return;
+                          }
+
+                          final auth = Provider.of<AuthProvider>(
+                            context,
+                            listen: false,
+                          );
+
+                          String? result = await auth.login(email, password);
+
+                          if (result == "success") {
+                            context.go(AppRoutes.home);
+                          } else {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text("Login gagal: $result")),
+                            );
+                          }
+                        },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.blue.shade700,
                           foregroundColor: Colors.white,
@@ -161,27 +187,11 @@ class _LoginScreenState extends State<LoginScreen> {
                       height: 48,
                       child: _isGoogleSigningIn
                           ? ElevatedButton(
+                              onPressed: null,
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: Colors.grey.shade300,
-                                elevation: 0,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(6),
-                                  side: const BorderSide(
-                                    color: Color(0xFFDADADA),
-                                  ),
-                                ),
                               ),
-                              onPressed: null,
-                              child: const SizedBox(
-                                width: 20,
-                                height: 20,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2.5,
-                                  valueColor: AlwaysStoppedAnimation<Color>(
-                                    Color(0xFF4285F4),
-                                  ),
-                                ),
-                              ),
+                              child: const CircularProgressIndicator(),
                             )
                           : ElevatedButton.icon(
                               style: ElevatedButton.styleFrom(
@@ -201,30 +211,11 @@ class _LoginScreenState extends State<LoginScreen> {
                                 ),
                               ),
                               onPressed: () => _handleGoogleSignIn(context),
-                              icon: Container(
-                                width: 20,
-                                height: 20,
-                                decoration: BoxDecoration(
-                                  color: Colors.white,
-                                  borderRadius: BorderRadius.circular(2),
-                                ),
-                                child: const Center(
-                                  child: Text(
-                                    'G',
-                                    style: TextStyle(
-                                      color: Color(0xFF4285F4),
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 12,
-                                    ),
-                                  ),
-                                ),
-                              ),
+                              icon: const Icon(Icons.login, size: 20),
                               label: Text(
-                                "Sign in with Google",
+                                "Sign in dengan Google",
                                 style: TextStyle(
-                                  color: Colors.black87,
                                   fontSize: inputFont.clamp(13, 16),
-                                  fontWeight: FontWeight.w500,
                                 ),
                               ),
                             ),
@@ -249,7 +240,8 @@ class _LoginScreenState extends State<LoginScreen> {
                                 decoration: TextDecoration.underline,
                               ),
                               recognizer: TapGestureRecognizer()
-                                ..onTap = () => context.go(AppRoutes.signIn),
+                                ..onTap = () =>
+                                    context.go(AppRoutes.signIn),
                             ),
                           ],
                         ),
