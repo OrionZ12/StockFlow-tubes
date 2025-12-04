@@ -3,16 +3,15 @@ import 'package:go_router/go_router.dart';
 import 'package:tubes/screen/history_screen.dart';
 import 'package:tubes/screen/notification_screen.dart';
 import 'package:tubes/screen/profile_screen.dart';
-import 'package:tubes/screen/account_screen.dart';  
+import 'package:tubes/screen/account_screen.dart';
 import 'package:tubes/screen/signup_screen.dart';
-// Pastikan ini ada dan benar diimport
 
 import '../screen/splash_screen.dart';
 import '../screen/firstime_screen.dart';
 import '../screen/login_screen.dart';
 import '../screen/signsuc_screen.dart';
 import '../screen/home_screen.dart';
-
+import '../widget/app_scaffold.dart';
 
 
 
@@ -26,9 +25,8 @@ class AppRoutes {
   static const String history = '/history';
   static const String notification = '/notification';
   static const String profile = '/profile';
-  static const String account = '/account';  // Rute untuk AccountPage
+  static const String account = '/account';
   static const String signUp = '/signup';
-
 }
 
 GoRouter createRouter() {
@@ -41,76 +39,55 @@ GoRouter createRouter() {
     routes: [
       GoRoute(
         path: AppRoutes.splash,
-        name: 'splash',
         builder: (context, state) => const SplashScreen(),
       ),
       GoRoute(
         path: AppRoutes.signUp,
-        name: 'signup',
         builder: (context, state) => const SignUpScreen(),
       ),
       GoRoute(
         path: AppRoutes.firstTime,
-        name: 'firstime',
         builder: (context, state) => const FirstTimeScreen(),
       ),
       GoRoute(
         path: AppRoutes.login,
-        name: 'login',
         builder: (context, state) => const LoginScreen(),
       ),
       GoRoute(
         path: AppRoutes.signSuccess,
-        name: 'signsuccess',
         builder: (context, state) => const SuccessScreen(),
       ),
+
+      // ========== SCREEN UTAMA DIBUNGKUS AppScaffold ==========
       GoRoute(
         path: AppRoutes.home,
-        name: 'home',
-        builder: (context, state) => const HomeScreen(),
+        builder: (context, state) =>
+        const AppScaffold(child: HomeScreen()),
       ),
       GoRoute(
         path: AppRoutes.history,
-        name: 'history',
-        builder: (context, state) => const RiwayatPage(),
+        builder: (context, state) =>
+        const AppScaffold(child: RiwayatPage()),
       ),
       GoRoute(
         path: AppRoutes.notification,
-        name: 'notification',
-        builder: (context, state) => const NotificationStaffPage(),
+        builder: (context, state) =>
+        const AppScaffold(child: NotificationStaffPage()),
       ),
       GoRoute(
         path: AppRoutes.profile,
-        name: 'profile',
-        builder: (context, state) => const ProfilePage(),
+        builder: (context, state) =>
+        const AppScaffold(child: ProfilePage()),
       ),
       GoRoute(
         path: AppRoutes.account,
-        name: 'account',
-        builder: (context, state) => const AccountPage(),  // Pastikan AccountPage sudah ada di screen/account_screen.dart
+        builder: (context, state) =>
+        const AppScaffold(child: AccountPage()),
       ),
     ],
+
     errorBuilder: (context, state) => Scaffold(
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(Icons.error, size: 64, color: Colors.red),
-            const SizedBox(height: 16),
-            Text(
-              '404 - Page Not Found',
-              style: Theme.of(context).textTheme.headlineMedium,
-            ),
-            const SizedBox(height: 8),
-            Text('Path: ${state.uri.path}'),
-            const SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: () => context.go(AppRoutes.home),
-              child: const Text('Go Home'),
-            ),
-          ],
-        ),
-      ),
+      body: Center(child: Text('404 Page not found: ${state.uri.path}')),
     ),
   );
 }
