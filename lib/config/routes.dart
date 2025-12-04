@@ -10,7 +10,6 @@ import 'package:tubes/screen/signup_screen.dart';
 import '../screen/splash_screen.dart';
 import '../screen/firstime_screen.dart';
 import '../screen/login_screen.dart';
-import '../screen/signin_screen.dart';
 import '../screen/signsuc_screen.dart';
 import '../screen/home_screen.dart';
 
@@ -59,11 +58,6 @@ GoRouter createRouter() {
         path: AppRoutes.login,
         name: 'login',
         builder: (context, state) => const LoginScreen(),
-      ),
-      GoRoute(
-        path: AppRoutes.signIn,
-        name: 'signin',
-        builder: (context, state) => const SigninScreen(),
       ),
       GoRoute(
         path: AppRoutes.signSuccess,
