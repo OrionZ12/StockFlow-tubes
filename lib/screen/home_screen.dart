@@ -1,9 +1,16 @@
 import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
 
-class HomeScreen extends StatelessWidget {
-  const HomeScreen({super.key});
+class HomeScreen extends StatefulWidget {
+  final String role; // <-- tambah role
 
+  const HomeScreen({super.key, required this.role});
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
   final products = const [
     ["Mouse Wireless", "Mouse Bluetooth 2.4GHz, warna hitam", 54],
     ["Kabel USB", "Kabel USB-A ke USB-C, panjang 2 m", 44],
@@ -24,7 +31,7 @@ class HomeScreen extends StatelessWidget {
           // MAIN CONTENT
           // ============================
           ListView(
-            padding: const EdgeInsets.fromLTRB(16, 40, 16, 90),
+            padding: const EdgeInsets.fromLTRB(16, 40, 16, 140),
             children: [
               _header(),
               const SizedBox(height: 14),
@@ -37,23 +44,22 @@ class HomeScreen extends StatelessWidget {
           ),
 
           // ============================
-          // FLOATING BUTTON (manual)
+          // FLOATING BUTTON
           // ============================
           Positioned(
             right: 16,
+            bottom: 80,
+            child: _floatingButton(),
+          ),
+
+          // ============================
+          // ROLE-BASED BUTTON
+          // ============================
+          Positioned(
+            left: 16,
+            right: 16,
             bottom: 16,
-            child: Container(
-              width: 56,
-              height: 56,
-              decoration: const BoxDecoration(
-                color: AppColors.blueSoft,
-                shape: BoxShape.circle,
-              ),
-              child: IconButton(
-                onPressed: () {},
-                icon: const Icon(Icons.add, color: Colors.white, size: 28),
-              ),
-            ),
+            child: _roleButton(), // <-- tombol sesuai role
           ),
         ],
       ),
@@ -61,7 +67,7 @@ class HomeScreen extends StatelessWidget {
   }
 
   // ------------------------------
-  // HEADER pengganti AppBar
+  // HEADER
   // ------------------------------
   Widget _header() {
     return const Row(
@@ -288,6 +294,73 @@ class HomeScreen extends StatelessWidget {
           )
         ],
       ),
+    );
+  }
+
+  // ------------------------------
+  // FLOATING BUTTON
+  // ------------------------------
+  Widget _floatingButton() {
+    return Container(
+      width: 56,
+      height: 56,
+      decoration: const BoxDecoration(
+        color: AppColors.blueMain,
+        shape: BoxShape.circle,
+      ),
+      child: IconButton(
+        icon: const Icon(Icons.add, color: Colors.white, size: 28),
+        onPressed: () {},
+      ),
+    );
+  }
+
+  // ------------------------------
+  // ROLE BASED BUTTON
+  // ------------------------------
+  Widget _roleButton() {
+    if (widget.role == "staff") {
+      return ElevatedButton(
+        style: ElevatedButton.styleFrom(
+          backgroundColor: AppColors.blueMain,
+          foregroundColor: Colors.white,
+          padding: const EdgeInsets.symmetric(vertical: 14),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14),
+          ),
+        ),
+        onPressed: () {},
+        child: const Text("Staff: Input Barang Masuk"),
+      );
+    }
+
+    if (widget.role == "whmanager") {
+      return ElevatedButton(
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Colors.green,
+          foregroundColor: Colors.white,
+          padding: const EdgeInsets.symmetric(vertical: 14),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14),
+          ),
+        ),
+        onPressed: () {},
+        child: const Text("Manager: Tambah Supplier"),
+      );
+    }
+
+    // Default / Admin
+    return ElevatedButton(
+      style: ElevatedButton.styleFrom(
+        backgroundColor: Colors.orange,
+        foregroundColor: Colors.white,
+        padding: const EdgeInsets.symmetric(vertical: 14),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(14),
+        ),
+      ),
+      onPressed: () {},
+      child: const Text("Admin: Kelola Pengguna"),
     );
   }
 }

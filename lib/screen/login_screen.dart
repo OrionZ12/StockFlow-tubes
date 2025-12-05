@@ -45,15 +45,54 @@ class _LoginScreenState extends State<LoginScreen> {
 
     setState(() => _isEmailSigningIn = false);
 
+    // ==============================
+    // LOGIN SUKSES
+    // ==============================
     if (result == "success") {
-      context.go(AppRoutes.home);
-    } else if (result == "user-not-found") {
-      _showUserNotFoundDialog();
-    } else if (result == "wrong-password") {
-      _showMessage("Password salah", Colors.red);
-    } else {
-      _showMessage("Login gagal: $result", Colors.red);
+      final role = auth.role;
+
+      // Karena role hanya ada 2, kita buat lebih simple:
+      if (role == "staff") {
+        context.go(AppRoutes.staffHome);
+      } else if (role == "whmanager") {
+        context.go(AppRoutes.whHome);
+      } else {
+        _showMessage("Role tidak valid. Hubungi admin.", Colors.red);
+      }
+      return;
     }
+
+    // ==============================
+    // UNVERIFIED USER
+    // ==============================
+    if (result.contains("belum diverifikasi")) {
+      _showMessage(
+        "Akun Anda belum diverifikasi admin.\nSilakan tunggu persetujuan.",
+        Colors.orange,
+      );
+      return;
+    }
+
+    // ==============================
+    // USER NOT FOUND
+    // ==============================
+    if (result == "Email tidak ditemukan." || result == "user-not-found") {
+      _showUserNotFoundDialog();
+      return;
+    }
+
+    // ==============================
+    // WRONG PASSWORD
+    // ==============================
+    if (result == "Password salah." || result == "wrong-password") {
+      _showMessage("Password salah", Colors.red);
+      return;
+    }
+
+    // ==============================
+    // OTHER ERRORS
+    // ==============================
+    _showMessage("Login gagal: $result", Colors.red);
   }
 
   void _showMessage(String msg, Color color) {
@@ -178,20 +217,20 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                       child: _isEmailSigningIn
                           ? const SizedBox(
-                              height: 22,
-                              width: 22,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: Colors.white,
-                              ),
-                            )
+                        height: 22,
+                        width: 22,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.white,
+                        ),
+                      )
                           : Text(
-                              "Masuk",
-                              style: TextStyle(
-                                fontSize: inputFont.clamp(14, 20),
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
+                        "Masuk",
+                        style: TextStyle(
+                          fontSize: inputFont.clamp(14, 20),
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                     ),
                   ),
 
