@@ -9,6 +9,7 @@ import '../widget/header_widget.dart';
 import '../widget/update_section.dart';
 import '../widget/search_section.dart';
 import '../widget/product_list.dart';
+import '../widget/role_button.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -18,6 +19,21 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  bool showRoleButton = true;
+
+  @override
+  void initState() {
+    super.initState();
+
+    Future.delayed(const Duration(seconds: 3), () {
+      if (mounted) {
+        setState(() {
+          showRoleButton = false;
+        });
+      }
+    });
+  }
+
   final products = const [
     ["Mouse Wireless", "Mouse Bluetooth 2.4GHz, warna hitam", 54],
     ["Kabel USB", "Kabel USB-A ke USB-C, panjang 2 m", 44],
@@ -47,7 +63,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 w * 0.04,
                 h * 0.02,
                 w * 0.04,
-                h * 0.15,
+                h * 0.03,
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -85,12 +101,17 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
 
             // Role button
-            Positioned(
-              left: w * 0.04,
-              right: w * 0.04,
-              bottom: w * 0.04,
-              child: _roleButton(role, w),
-            ),
+            if (showRoleButton)
+              Positioned(
+                left: w * 0.04,
+                right: w * 0.04,
+                bottom: h * 0.05,     // naik sedikit dari navbar
+                child: RoleButton(
+                  role: role,
+                  width: w,
+                ),
+              ),
+
           ],
         ),
       ),
