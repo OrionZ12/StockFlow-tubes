@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import '../theme/app_colors.dart';
+import '../config/routes.dart';
 import '../provider/auth_provider.dart';
 
 class ProfilePage extends StatefulWidget {
@@ -13,33 +14,13 @@ class ProfilePage extends StatefulWidget {
 }
 
 class _ProfilePageState extends State<ProfilePage> {
-  int _selectedIndex = 2;
-
-  void _onNavTap(int index) {
-    if (index == _selectedIndex) return;
-
-    switch (index) {
-      case 0:
-        context.go('/home');
-        break;
-      case 1:
-        context.go('/history');
-        break;
-      case 2:
-        context.go('/profile');
-        break;
-    }
-
-    setState(() => _selectedIndex = index);
-  }
-
   void _showLogoutDialog() {
     final width = MediaQuery.of(context).size.width;
 
     showDialog(
       context: context,
       barrierDismissible: false,
-      barrierColor: Colors.black.(0.5),
+      barrierColor: Colors.black.withOpacity(0.5),
       builder: (dialogContext) {
         return Center(
           child: Material(
@@ -84,7 +65,7 @@ class _ProfilePageState extends State<ProfilePage> {
                           Navigator.of(dialogContext).pop();
                           await context.read<AuthProvider>().signOut();
                           if (!mounted) return;
-                          context.go('/login');
+                          context.go(AppRoutes.login);
                         },
                         child: Container(
                           alignment: Alignment.center,
@@ -148,13 +129,14 @@ class _ProfilePageState extends State<ProfilePage> {
           Expanded(
             child: ListView(
               children: [
-                _menu("Informasi Akun", () => context.go('/account')),
-                _menu("Kelola Notifikasi", () {}),
+                _menu("Informasi Akun", () => context.go(AppRoutes.account)),
+                _menu("Kelola Notifikasi",
+                        () => context.go(AppRoutes.notificationSettings)),
                 _menu("Ganti Kata Sandi", () {}),
                 _menu("Keluar Akun", _showLogoutDialog),
               ],
             ),
-          )
+          ),
         ],
       ),
     );
@@ -176,7 +158,7 @@ class _ProfilePageState extends State<ProfilePage> {
                 color: Colors.black12,
                 blurRadius: 4,
                 offset: Offset(0, 1),
-              )
+              ),
             ],
           ),
           child: Text(
