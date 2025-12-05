@@ -39,7 +39,7 @@ class _ProfilePageState extends State<ProfilePage> {
     showDialog(
       context: context,
       barrierDismissible: false,
-      barrierColor: Colors.black.(0.5),
+      barrierColor: Colors.black,
       builder: (dialogContext) {
         return Center(
           child: Material(

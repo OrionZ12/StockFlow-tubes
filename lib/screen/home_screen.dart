@@ -30,42 +30,66 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final screen = MediaQuery.of(context).size;
+    final w = screen.width;
+    final h = screen.height;
+
     final auth = context.watch<AuthProvider>();
     final role = auth.role;
 
     return SafeArea(
-      child: Container(
-        color: AppColors.pageBackground,
-        child: Stack(
+      child: Scaffold(
+        backgroundColor: AppColors.pageBackground,
+        body: Stack(
           children: [
-            ListView(
-              padding: const EdgeInsets.fromLTRB(16, 40, 16, 140),
-              children: [
-                const HeaderWidget(),
-                const SizedBox(height: 14),
+            Padding(
+              padding: EdgeInsets.fromLTRB(
+                w * 0.04,
+                h * 0.02,
+                w * 0.04,
+                h * 0.15,
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const HeaderWidget(),
+                  SizedBox(height: h * 0.015),
 
-                const UpdateSection(),
-                const SizedBox(height: 14),
+                  const UpdateSection(),
+                  SizedBox(height: h * 0.015),
 
-                const SearchSection(),
-                const SizedBox(height: 14),
+                  const SearchSection(),
+                  SizedBox(height: h * 0.015),
 
-                ProductList(products: products),
-                const SizedBox(height: 120), // ruang agar tidak ketutupan role button
-              ],
+                  // ⬇ Kotak putih besar + scroll list
+                  Expanded(
+                    child: Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(color: AppColors.softBorder),
+                      ),
+                      child: ProductList(products: products),
+                    ),
+                  ),
+                ],
+              ),
             ),
 
+            // Floating Button
             Positioned(
-              right: 16,
-              bottom: 80,
-              child: _floatingButton(),
+              right: w * 0.04,
+              bottom: h * 0.12,
+              child: _floatingButton(w),
             ),
 
+            // Role button
             Positioned(
-              left: 16,
-              right: 16,
-              bottom: 16,
-              child: _roleButton(role),
+              left: w * 0.04,
+              right: w * 0.04,
+              bottom: w * 0.04,
+              child: _roleButton(role, w),
             ),
           ],
         ),
@@ -73,43 +97,47 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _floatingButton() {
+  Widget _floatingButton(double w) {
     return Container(
-      width: 56,
-      height: 56,
+      width: w * 0.15,
+      height: w * 0.15,
       decoration: const BoxDecoration(
         color: AppColors.blueMain,
         shape: BoxShape.circle,
       ),
       child: IconButton(
-        icon: const Icon(Icons.add, color: Colors.white, size: 28),
+        icon: const Icon(Icons.add, color: Colors.white),
+        iconSize: w * 0.07,
         onPressed: () {},
       ),
     );
   }
 
-  Widget _roleButton(String role) {
+  Widget _roleButton(String role, double w) {
     if (role == "staff") {
-      return _roleBtn(AppColors.blueMain, "Staff: Input Barang Masuk");
+      return _roleBtn(AppColors.blueMain, "Staff: Input Barang Masuk", w);
     }
     if (role == "whmanager") {
-      return _roleBtn(Colors.green, "Manager: Tambah Supplier");
+      return _roleBtn(Colors.green, "Manager: Tambah Supplier", w);
     }
-    return _roleBtn(Colors.orange, "Admin: Kelola Pengguna");
+    return _roleBtn(Colors.orange, "Admin: Kelola Pengguna", w);
   }
 
-  Widget _roleBtn(Color color, String text) {
+  Widget _roleBtn(Color color, String text, double w) {
     return ElevatedButton(
       style: ElevatedButton.styleFrom(
         backgroundColor: color,
         foregroundColor: Colors.white,
-        padding: const EdgeInsets.symmetric(vertical: 14),
+        padding: EdgeInsets.symmetric(vertical: w * 0.035),
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(w * 0.04),
         ),
       ),
       onPressed: () {},
-      child: Text(text),
+      child: Text(
+        text,
+        style: TextStyle(fontSize: w * 0.04),
+      ),
     );
   }
 }

@@ -2,92 +2,75 @@ import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
 
 class ProductList extends StatelessWidget {
-  final List<List> products;
+  final List<List<dynamic>> products;
 
   const ProductList({super.key, required this.products});
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppColors.softBorder),
-      ),
-      child: Column(
-        children: [
-          const Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text("Produk", style: TextStyle(fontWeight: FontWeight.w600)),
-              Text("Jumlah", style: TextStyle(fontWeight: FontWeight.w600)),
-            ],
-          ),
-          const Divider(height: 20),
+    final w = MediaQuery.of(context).size.width;
 
-          // -----------------------------
-          // EMPTY STATE
-          // -----------------------------
-          if (products.isEmpty)
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 40),
+    return ListView.separated(
+      padding: EdgeInsets.zero,
+      itemCount: products.length,
+      separatorBuilder: (_, __) => const Divider(height: 20),
+      itemBuilder: (context, i) {
+        final title = products[i][0];
+        final desc  = products[i][1];
+        final qty   = products[i][2];
+
+        return Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // 📝 TEKS — dibuat Expanded supaya wrap & tidak overflow
+            Expanded(
               child: Column(
-                children: const [
-                  Icon(Icons.inbox, size: 40, color: AppColors.textMuted),
-                  SizedBox(height: 10),
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
                   Text(
-                    "Tidak ada produk",
-                    style: TextStyle(color: AppColors.textMuted),
+                    title,
+                    style: TextStyle(
+                      fontSize: w * 0.045,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                  SizedBox(height: w * 0.01),
+                  Text(
+                    desc,
+                    style: TextStyle(
+                      fontSize: w * 0.035,
+                      color: AppColors.textMuted,
+                    ),
                   ),
                 ],
               ),
-            )
-          else
-            ...products.map((item) => ProductItem(data: item)).toList(),
-        ],
-      ),
-    );
-  }
-}
+            ),
 
-class ProductItem extends StatelessWidget {
-  final List data;
+            SizedBox(width: w * 0.03),
 
-  const ProductItem({super.key, required this.data});
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 14),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(data[0], style: const TextStyle(fontWeight: FontWeight.w600)),
-              Text(
-                data[1],
-                style: const TextStyle(fontSize: 12, color: AppColors.textMuted),
+            // 🔵 BADGE JUMLAH
+            Container(
+              padding: EdgeInsets.symmetric(
+                vertical: w * 0.015,
+                horizontal: w * 0.04,
               ),
-            ],
-          ),
-          Container(
-            width: 40,
-            height: 26,
-            decoration: BoxDecoration(
-              color: AppColors.blueSoft,
-              borderRadius: BorderRadius.circular(20),
+              decoration: BoxDecoration(
+                color: AppColors.blueMain,
+                borderRadius: BorderRadius.circular(30),
+              ),
+              child: Text(
+                "$qty",
+                style: TextStyle(
+                  fontSize: w * 0.04,
+                  color: Colors.white,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
             ),
-            alignment: Alignment.center,
-            child: Text(
-              data[2].toString(),
-              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700),
-            ),
-          )
-        ],
-      ),
+          ],
+        );
+      },
     );
   }
 }
