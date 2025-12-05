@@ -62,11 +62,25 @@ class AuthProvider extends ChangeNotifier {
           .get();
 
       if (!doc.exists) {
+        // AUTO CREATE USER PROFILE
+        await FirebaseFirestore.instance.collection('users').doc(uid).set({
+          'uid': uid,
+          'email': email,
+          'name': user?.displayName ?? "",
+          'verified': false,
+          'role': 'none',
+          'createdAt': FieldValue.serverTimestamp(),
+        });
+
+        // Setelah dibuat, ambil ulang
+        final newDoc = await FirebaseFirestore.instance.collection('users').doc(uid).get();
+        _role = newDoc['role'] ?? "none";
+
         _isLoading = false;
-        await _authService.signOut();
         notifyListeners();
-        return "Data pengguna tidak ditemukan.";
+        return "success";
       }
+
 
       final data = doc.data() as Map<String, dynamic>;
 

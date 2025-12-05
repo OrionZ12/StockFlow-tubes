@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../provider/auth_provider.dart';
 import '../theme/app_colors.dart';
 
 class HomeScreen extends StatefulWidget {
-  final String role; // <-- tambah role
-
-  const HomeScreen({super.key, required this.role});
+  const HomeScreen({super.key});
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -23,13 +23,14 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final auth = context.watch<AuthProvider>();
+    final role = auth.role; // <-- ambil role dari provider
+
     return Container(
       color: AppColors.pageBackground,
       child: Stack(
         children: [
-          // ============================
           // MAIN CONTENT
-          // ============================
           ListView(
             padding: const EdgeInsets.fromLTRB(16, 40, 16, 140),
             children: [
@@ -43,32 +44,26 @@ class _HomeScreenState extends State<HomeScreen> {
             ],
           ),
 
-          // ============================
           // FLOATING BUTTON
-          // ============================
           Positioned(
             right: 16,
             bottom: 80,
             child: _floatingButton(),
           ),
 
-          // ============================
           // ROLE-BASED BUTTON
-          // ============================
           Positioned(
             left: 16,
             right: 16,
             bottom: 16,
-            child: _roleButton(), // <-- tombol sesuai role
+            child: _roleButton(role), // <-- kirim role
           ),
         ],
       ),
     );
   }
 
-  // ------------------------------
-  // HEADER
-  // ------------------------------
+  // --- HEADER ---
   Widget _header() {
     return const Row(
       children: [
@@ -92,9 +87,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // ------------------------------
-  // UPDATE SECTION
-  // ------------------------------
+  // --- UPDATE SECTION ---
   Widget _updateSection() {
     return Container(
       padding: const EdgeInsets.all(16),
@@ -125,16 +118,9 @@ class _HomeScreenState extends State<HomeScreen> {
                 children: const [
                   Icon(Icons.local_fire_department, color: AppColors.red),
                   SizedBox(height: 4),
-                  Text("Terlaris hari ini:",
-                      style: TextStyle(color: AppColors.textMuted)),
-                  Text("Powerbank (15)",
-                      style: TextStyle(
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.textPrimary)),
-                  Text("Kabel USB (20)",
-                      style: TextStyle(
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.textPrimary)),
+                  Text("Terlaris hari ini:", style: TextStyle(color: AppColors.textMuted)),
+                  Text("Powerbank (15)", style: TextStyle(fontWeight: FontWeight.w600)),
+                  Text("Kabel USB (20)", style: TextStyle(fontWeight: FontWeight.w600)),
                 ],
               ),
 
@@ -144,16 +130,9 @@ class _HomeScreenState extends State<HomeScreen> {
                 children: const [
                   Icon(Icons.warning_amber_rounded, color: AppColors.red),
                   SizedBox(height: 4),
-                  Text("Hampir habis:",
-                      style: TextStyle(color: AppColors.textMuted)),
-                  Text("Headset Gaming (12)",
-                      style: TextStyle(
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.red)),
-                  Text("Monitor LED (10)",
-                      style: TextStyle(
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.red)),
+                  Text("Hampir habis:", style: TextStyle(color: AppColors.textMuted)),
+                  Text("Headset Gaming (12)", style: TextStyle(fontWeight: FontWeight.w600, color: AppColors.red)),
+                  Text("Monitor LED (10)", style: TextStyle(fontWeight: FontWeight.w600, color: AppColors.red)),
                 ],
               ),
             ],
@@ -163,9 +142,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // ------------------------------
-  // SEARCH BAR
-  // ------------------------------
+  // --- SEARCH ---
   Widget _searchSection() {
     return Row(
       children: [
@@ -182,10 +159,7 @@ class _HomeScreenState extends State<HomeScreen> {
               children: [
                 Icon(Icons.search, size: 20, color: AppColors.textMuted),
                 SizedBox(width: 10),
-                Text(
-                  "Cari Produk",
-                  style: TextStyle(color: AppColors.textMuted),
-                ),
+                Text("Cari Produk", style: TextStyle(color: AppColors.textMuted)),
               ],
             ),
           ),
@@ -201,8 +175,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           child: const Row(
             children: [
-              Text("Semua Kategori",
-                  style: TextStyle(color: AppColors.textMuted)),
+              Text("Semua Kategori", style: TextStyle(color: AppColors.textMuted)),
               Icon(Icons.keyboard_arrow_down),
             ],
           ),
@@ -211,9 +184,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // ------------------------------
-  // PRODUCT LIST
-  // ------------------------------
+  // --- PRODUCT LIST ---
   Widget _productList() {
     return Container(
       padding: const EdgeInsets.all(16),
@@ -227,20 +198,11 @@ class _HomeScreenState extends State<HomeScreen> {
           const Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text("Produk",
-                  style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.textPrimary)),
-              Text("Jumlah",
-                  style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.textPrimary)),
+              Text("Produk", style: TextStyle(fontWeight: FontWeight.w600)),
+              Text("Jumlah", style: TextStyle(fontWeight: FontWeight.w600)),
             ],
           ),
           const Divider(height: 20),
-
           ...products.map((p) => _productItem(p)).toList(),
         ],
       ),
@@ -257,21 +219,8 @@ class _HomeScreenState extends State<HomeScreen> {
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                data[0],
-                style: const TextStyle(
-                  fontWeight: FontWeight.w600,
-                  fontSize: 14,
-                  color: AppColors.textPrimary,
-                ),
-              ),
-              Text(
-                data[1],
-                style: const TextStyle(
-                  fontSize: 12,
-                  color: AppColors.textMuted,
-                ),
-              ),
+              Text(data[0], style: const TextStyle(fontWeight: FontWeight.w600)),
+              Text(data[1], style: const TextStyle(fontSize: 12, color: AppColors.textMuted)),
             ],
           ),
 
@@ -286,10 +235,7 @@ class _HomeScreenState extends State<HomeScreen> {
             alignment: Alignment.center,
             child: Text(
               data[2].toString(),
-              style: const TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.w700,
-              ),
+              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700),
             ),
           )
         ],
@@ -297,9 +243,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // ------------------------------
-  // FLOATING BUTTON
-  // ------------------------------
+  // --- FLOATING BUTTON ---
   Widget _floatingButton() {
     return Container(
       width: 56,
@@ -315,44 +259,23 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // ------------------------------
-  // ROLE BASED BUTTON
-  // ------------------------------
-  Widget _roleButton() {
-    if (widget.role == "staff") {
-      return ElevatedButton(
-        style: ElevatedButton.styleFrom(
-          backgroundColor: AppColors.blueMain,
-          foregroundColor: Colors.white,
-          padding: const EdgeInsets.symmetric(vertical: 14),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(14),
-          ),
-        ),
-        onPressed: () {},
-        child: const Text("Staff: Input Barang Masuk"),
-      );
+  // --- ROLE BASED BUTTON ---
+  Widget _roleButton(String role) {
+    if (role == "staff") {
+      return _roleBtn(AppColors.blueMain, "Staff: Input Barang Masuk");
     }
 
-    if (widget.role == "whmanager") {
-      return ElevatedButton(
-        style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.green,
-          foregroundColor: Colors.white,
-          padding: const EdgeInsets.symmetric(vertical: 14),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(14),
-          ),
-        ),
-        onPressed: () {},
-        child: const Text("Manager: Tambah Supplier"),
-      );
+    if (role == "whmanager") {
+      return _roleBtn(Colors.green, "Manager: Tambah Supplier");
     }
 
-    // Default / Admin
+    return _roleBtn(Colors.orange, "Admin: Kelola Pengguna");
+  }
+
+  Widget _roleBtn(Color color, String text) {
     return ElevatedButton(
       style: ElevatedButton.styleFrom(
-        backgroundColor: Colors.orange,
+        backgroundColor: color,
         foregroundColor: Colors.white,
         padding: const EdgeInsets.symmetric(vertical: 14),
         shape: RoundedRectangleBorder(
@@ -360,7 +283,7 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
       ),
       onPressed: () {},
-      child: const Text("Admin: Kelola Pengguna"),
+      child: Text(text),
     );
   }
 }

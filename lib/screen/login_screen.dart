@@ -49,16 +49,7 @@ class _LoginScreenState extends State<LoginScreen> {
     // LOGIN SUKSES
     // ==============================
     if (result == "success") {
-      final role = auth.role;
-
-      // Karena role hanya ada 2, kita buat lebih simple:
-      if (role == "staff") {
-        context.go(AppRoutes.staffHome);
-      } else if (role == "whmanager") {
-        context.go(AppRoutes.whHome);
-      } else {
-        _showMessage("Role tidak valid. Hubungi admin.", Colors.red);
-      }
+      context.go(AppRoutes.home);   // <── DIGANTI INI SAJA
       return;
     }
 
@@ -157,7 +148,6 @@ class _LoginScreenState extends State<LoginScreen> {
 
                   const SizedBox(height: 30),
 
-                  // EMAIL
                   TextField(
                     controller: emailController,
                     style: TextStyle(fontSize: inputFont),
@@ -175,7 +165,6 @@ class _LoginScreenState extends State<LoginScreen> {
 
                   const SizedBox(height: 16),
 
-                  // PASSWORD
                   TextField(
                     controller: passwordController,
                     obscureText: _obscurePass,
@@ -190,9 +179,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                       suffixIcon: IconButton(
                         icon: Icon(
-                          _obscurePass
-                              ? Icons.visibility_off
-                              : Icons.visibility,
+                          _obscurePass ? Icons.visibility_off : Icons.visibility,
                         ),
                         onPressed: () =>
                             setState(() => _obscurePass = !_obscurePass),
@@ -202,7 +189,6 @@ class _LoginScreenState extends State<LoginScreen> {
 
                   const SizedBox(height: 24),
 
-                  // LOGIN BUTTON
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton(
@@ -236,7 +222,6 @@ class _LoginScreenState extends State<LoginScreen> {
 
                   const SizedBox(height: 20),
 
-                  // SIGN UP TEXT
                   Center(
                     child: RichText(
                       text: TextSpan(

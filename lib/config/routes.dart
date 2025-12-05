@@ -72,9 +72,12 @@ GoRouter createRouter() {
       // ====== MAIN SCREENS ======
       GoRoute(
         path: AppRoutes.home,
-        builder: (context, state) =>
-        const AppScaffold(child: HomeScreen()),
+        builder: (context, state) => const AppScaffold(
+          child: HomeScreen(),
+        ),
       ),
+
+
       GoRoute(
         path: AppRoutes.history,
         builder: (context, state) =>
