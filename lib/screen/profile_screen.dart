@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
+
 import '../theme/app_colors.dart';
+import '../provider/auth_provider.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -30,6 +33,111 @@ class _ProfilePageState extends State<ProfilePage> {
     setState(() => _selectedIndex = index);
   }
 
+  void _showLogoutDialog() {
+    final width = MediaQuery.of(context).size.width;
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      barrierColor: Colors.black.withOpacity(0.5),
+      builder: (dialogContext) {
+        return Center(
+          child: Material(
+            color: Colors.transparent,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: width * 0.78,
+                  padding: const EdgeInsets.fromLTRB(24, 26, 24, 20),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(28),
+                    boxShadow: const [
+                      BoxShadow(
+                        color: Colors.black54,
+                        blurRadius: 12,
+                        offset: Offset(0, 6),
+                      ),
+                    ],
+                  ),
+                  child: const Text(
+                    'Apakah anda yakin ingin keluar dari akun?',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 16,
+                      height: 1.4,
+                      fontWeight: FontWeight.w500,
+                      color: Colors.black87,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    SizedBox(
+                      width: width * 0.32,
+                      height: 48,
+                      child: GestureDetector(
+                        onTap: () async {
+                          Navigator.of(dialogContext).pop();
+                          await context.read<AuthProvider>().signOut();
+                          if (!mounted) return;
+                          context.go('/login');
+                        },
+                        child: Container(
+                          alignment: Alignment.center,
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF7CF269),
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: const Text(
+                            'YA',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w700,
+                              color: Colors.black,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 28),
+                    SizedBox(
+                      width: width * 0.32,
+                      height: 48,
+                      child: GestureDetector(
+                        onTap: () {
+                          Navigator.of(dialogContext).pop();
+                        },
+                        child: Container(
+                          alignment: Alignment.center,
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFFF3D2E),
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: const Text(
+                            'TIDAK',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w700,
+                              color: Colors.black,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Padding(
@@ -37,15 +145,13 @@ class _ProfilePageState extends State<ProfilePage> {
       child: Column(
         children: [
           const SizedBox(height: 40),
-
-          // --- Profile menu list ---
           Expanded(
             child: ListView(
               children: [
                 _menu("Informasi Akun", () => context.go('/account')),
                 _menu("Kelola Notifikasi", () {}),
                 _menu("Ganti Kata Sandi", () {}),
-                _menu("Keluar Akun", () {}),
+                _menu("Keluar Akun", _showLogoutDialog),
               ],
             ),
           )
