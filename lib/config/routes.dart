@@ -16,7 +16,6 @@ import '../screen/signsuc_screen.dart';
 import '../screen/home_screen.dart';
 import '../widget/app_scaffold.dart';
 
-
 // =========================
 // ROUTES
 // =========================
@@ -38,8 +37,6 @@ class AppRoutes {
   static const String logoutConfirm = '/logout-confirm';
 }
 
-
-
 // =========================
 // ROUTER CREATOR
 // =========================
@@ -48,39 +45,30 @@ GoRouter createRouter() {
     initialLocation: AppRoutes.splash,
 
     routes: [
-
       // ============================
       // AUTH & ONBOARDING
       // ============================
-      GoRoute(
-        path: AppRoutes.splash,
-        builder: (_, __) => const SplashScreen(),
-      ),
+      GoRoute(path: AppRoutes.splash, builder: (_, __) => const SplashScreen()),
+
       GoRoute(
         path: AppRoutes.firstTime,
         builder: (_, __) => const FirstTimeScreen(),
       ),
-      GoRoute(
-        path: AppRoutes.login,
-        builder: (_, __) => const LoginScreen(),
-      ),
-      GoRoute(
-        path: AppRoutes.signUp,
-        builder: (_, __) => const SignUpScreen(),
-      ),
+
+      GoRoute(path: AppRoutes.login, builder: (_, __) => const LoginScreen()),
+
+      GoRoute(path: AppRoutes.signUp, builder: (_, __) => const SignUpScreen()),
+
       GoRoute(
         path: AppRoutes.signSuccess,
         builder: (_, __) => const SuccessScreen(),
       ),
 
       // ============================
-      // 🔥 SHELL ROUTE UNTUK BOTTOM NAV
+      // 🔥 SHELL ROUTE (BOTTOM NAVBAR)
       // ============================
       ShellRoute(
-        builder: (context, state, child) {
-          // child = halaman yang sedang aktif
-          return AppScaffold(child: child);
-        },
+        builder: (context, state, child) => AppScaffold(child: child),
         routes: [
           GoRoute(
             path: AppRoutes.home,
@@ -94,11 +82,15 @@ GoRouter createRouter() {
             path: AppRoutes.profile,
             builder: (_, __) => const ProfilePage(),
           ),
+          GoRoute(
+            path: AppRoutes.account,
+            builder: (_, __) => const AccountPage(),
+          ),
         ],
       ),
 
       // ============================
-      // OUTSIDE NAVBAR ROUTES
+      // ROUTE DI LUAR NAVBAR
       // ============================
       GoRoute(
         path: AppRoutes.notification,
@@ -110,7 +102,6 @@ GoRouter createRouter() {
         builder: (_, __) => const LogoutConfirmScreen(),
       ),
     ],
-
 
     // ============================
     // ERROR PAGE
