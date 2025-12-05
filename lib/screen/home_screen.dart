@@ -93,10 +93,10 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
 
-            // Floating Button
+            // Floating Button untuk tanda tambah 
             Positioned(
               right: w * 0.04,
-              bottom: h * 0.12,
+              bottom: h * 0.02,
               child: _floatingButton(w),
             ),
 
@@ -118,21 +118,22 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _floatingButton(double w) {
-    return Container(
-      width: w * 0.15,
-      height: w * 0.15,
-      decoration: const BoxDecoration(
-        color: AppColors.blueMain,
-        shape: BoxShape.circle,
-      ),
-      child: IconButton(
-        icon: const Icon(Icons.add, color: Colors.white),
-        iconSize: w * 0.07,
-        onPressed: () {},
-      ),
-    );
-  }
+Widget _floatingButton(double w) {
+  return Container(
+    width: w * 0.15,
+    height: w * 0.15,
+    decoration: BoxDecoration( // ← BUANG const
+      color: const Color.fromARGB(255, 255, 255, 255).withOpacity(0.9),
+      shape: BoxShape.circle,
+    ),
+    child: IconButton(
+      icon: const Icon(Icons.add, color: AppColors.blueMain),
+      iconSize: w * 0.07,
+      onPressed: () {},
+    ),
+  );
+}
+
 
   Widget _roleButton(String role, double w) {
     if (role == "staff") {
