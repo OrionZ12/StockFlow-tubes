@@ -14,17 +14,11 @@ class AppScaffold extends StatelessWidget {
     return 0; // default: home
   }
 
-  void _onNavTap(BuildContext context, int index) {
+ void _onNavTap(BuildContext context, int index) {
     switch (index) {
-      case 0:
-        context.go(AppRoutes.home);
-        break;
-      case 1:
-        context.go(AppRoutes.history);
-        break;
-      case 2:
-        context.go(AppRoutes.profile);
-        break;
+      case 0: context.go(AppRoutes.home); break;
+      case 1: context.go(AppRoutes.history); break;
+      case 2: context.go(AppRoutes.profile); break;
     }
   }
 
@@ -32,14 +26,12 @@ class AppScaffold extends StatelessWidget {
   Widget build(BuildContext context) {
     // Ambil lokasi rute dari GoRouterState
     final state = GoRouterState.of(context);
-    final location = state.uri.toString();
-
-    final currentIndex = _indexFromLocation(location);
+    final index = _indexFromLocation(state.uri.toString());
 
     return Scaffold(
       body: child,
       bottomNavigationBar: BottomNavBar(
-        currentIndex: currentIndex,
+        currentIndex: index,
         onTap: (i) => _onNavTap(context, i),
       ),
     );
