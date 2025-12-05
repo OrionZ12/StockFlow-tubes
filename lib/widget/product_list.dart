@@ -2,92 +2,153 @@ import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
 
 class ProductList extends StatelessWidget {
-  final List<List> products;
+  final List products;
 
-  const ProductList({super.key, required this.products});
+  const ProductList({
+    super.key,
+    required this.products,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppColors.softBorder),
-      ),
-      child: Column(
-        children: [
-          const Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text("Produk", style: TextStyle(fontWeight: FontWeight.w600)),
-              Text("Jumlah", style: TextStyle(fontWeight: FontWeight.w600)),
-            ],
-          ),
-          const Divider(height: 20),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final width = constraints.maxWidth;
 
-          // -----------------------------
-          // EMPTY STATE
-          // -----------------------------
-          if (products.isEmpty)
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 40),
-              child: Column(
-                children: const [
-                  Icon(Icons.inbox, size: 40, color: AppColors.textMuted),
-                  SizedBox(height: 10),
-                  Text(
-                    "Tidak ada produk",
-                    style: TextStyle(color: AppColors.textMuted),
+        // Responsif font
+        double titleFont = width < 340 ? 13 : 15;
+        double descFont = width < 340 ? 11 : 12;
+        double chipFont = width < 340 ? 11 : 13;
+
+        return Column(
+          children: [
+            // =============================
+            // HEADER TABEL
+            // =============================
+            Container(
+              padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+              decoration: BoxDecoration(
+                color: const Color(0xFFF2F5FF),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: AppColors.softBorder),
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    flex: 3,
+                    child: Text(
+                      "Produk",
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: titleFont,
+                        color: Colors.black87,
+                      ),
+                    ),
+                  ),
+                  Expanded(
+                    flex: 1,
+                    child: Text(
+                      "Jumlah",
+                      textAlign: TextAlign.right,
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: titleFont,
+                        color: Colors.black87,
+                      ),
+                    ),
                   ),
                 ],
               ),
-            )
-          else
-            ...products.map((item) => ProductItem(data: item)).toList(),
-        ],
-      ),
-    );
-  }
-}
+            ),
 
-class ProductItem extends StatelessWidget {
-  final List data;
+            const SizedBox(height: 6),
 
-  const ProductItem({super.key, required this.data});
+            // =============================
+            // LIST PRODUK – SCROLL ONLY HERE
+            // =============================
+            Expanded(
+              child: ListView.separated(
+                itemCount: products.length,
+                separatorBuilder: (_, __) => const SizedBox(height: 6),
+                itemBuilder: (context, i) {
+                  final name = products[i][0];
+                  final desc = products[i][1];
+                  final qty = products[i][2];
 
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 14),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(data[0], style: const TextStyle(fontWeight: FontWeight.w600)),
-              Text(
-                data[1],
-                style: const TextStyle(fontSize: 12, color: AppColors.textMuted),
+                  return Container(
+                    padding: const EdgeInsets.symmetric(
+                      vertical: 12,
+                      horizontal: 12,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: AppColors.softBorder),
+                    ),
+                    child: Row(
+                      children: [
+                        // PRODUK + DESKRIPSI
+                        Expanded(
+                          flex: 3,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                name,
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: titleFont,
+                                  color: Colors.black87,
+                                ),
+                              ),
+                              const SizedBox(height: 3),
+                              Text(
+                                desc,
+                                style: TextStyle(
+                                  fontSize: descFont,
+                                  color: Colors.grey.shade600,
+                                  height: 1.2,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+
+                        // JUMLAH DALAM CHIP BIRU
+                        Expanded(
+                          flex: 1,
+                          child: Align(
+                            alignment: Alignment.centerRight,
+                            child: Container(
+                              padding: EdgeInsets.symmetric(
+                                vertical: 6,
+                                horizontal: width < 340 ? 10 : 14,
+                              ),
+                              decoration: BoxDecoration(
+                                color: AppColors.blueMain,
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              child: Text(
+                                "$qty",
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: chipFont,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                },
               ),
-            ],
-          ),
-          Container(
-            width: 40,
-            height: 26,
-            decoration: BoxDecoration(
-              color: AppColors.blueSoft,
-              borderRadius: BorderRadius.circular(20),
             ),
-            alignment: Alignment.center,
-            child: Text(
-              data[2].toString(),
-              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700),
-            ),
-          )
-        ],
-      ),
+          ],
+        );
+      },
     );
   }
 }

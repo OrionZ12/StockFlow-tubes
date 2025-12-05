@@ -1,12 +1,24 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class AccountPage extends StatelessWidget {
   const AccountPage({super.key});
 
+  Future<Map<String, dynamic>?> _getUserData() async {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null) return null;
+
+    final doc =
+        await FirebaseFirestore.instance.collection('users').doc(uid).get();
+
+    return doc.data();
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Container( // <-- BUKAN Scaffold lagi
+    return Container(
       color: const Color(0xFFE6EDFE),
       child: SafeArea(
         child: Padding(
@@ -51,21 +63,33 @@ class AccountPage extends StatelessWidget {
               const SizedBox(height: 20),
 
               Expanded(
-                child: SingleChildScrollView(
-                  child: Column(
-                    children: const [
-                      AccountCard(label: "Nama", value: "Jason Sanjaya"),
-                      SizedBox(height: 12),
-                      AccountCard(label: "ID", value: "231401066"),
-                      SizedBox(height: 12),
-                      AccountCard(label: "Jabatan", value: "Staff"),
-                      SizedBox(height: 12),
-                      AccountCard(
-                        label: "Email",
-                        value: "jasonsanjaya1503@gmail.com",
+                child: FutureBuilder<Map<String, dynamic>?>(
+                  future: _getUserData(),
+                  builder: (context, snapshot) {
+                    if (!snapshot.hasData) {
+                      return const Center(
+                        child: CircularProgressIndicator(),
+                      );
+                    }
+
+                    final data = snapshot.data!;
+
+                    return SingleChildScrollView(
+                      child: Column(
+                        children: [
+                          AccountCard(label: "Nama", value: data["name"] ?? "-"),
+                          const SizedBox(height: 12),
+                          AccountCard(label: "ID", value: data["id"] ?? "-"),
+                          const SizedBox(height: 12),
+                          AccountCard(
+                              label: "Jabatan", value: data["role"] ?? "-"),
+                          const SizedBox(height: 12),
+                          AccountCard(
+                              label: "Email", value: data["email"] ?? "-"),
+                        ],
                       ),
-                    ],
-                  ),
+                    );
+                  },
                 ),
               ),
             ],
@@ -111,11 +135,7 @@ class AccountCard extends StatelessWidget {
                 color: Colors.black87,
               )),
           const SizedBox(height: 4),
-          Container(
-            height: 1,
-            width: double.infinity,
-            color: Colors.grey.shade300,
-          ),
+          Container(height: 1, width: double.infinity, color: Colors.grey.shade300),
           const SizedBox(height: 4),
           Text(
             value,
