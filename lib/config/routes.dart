@@ -8,6 +8,7 @@ import 'package:tubes/screen/account_screen.dart';
 import 'package:tubes/screen/signup_screen.dart';
 import 'package:tubes/screen/logout_confirm_screen.dart';
 import 'package:tubes/screen/notification_settings_page.dart';
+import 'package:tubes/screen/change_password_screen.dart';
 
 import '../screen/splash_screen.dart';
 import '../screen/firstime_screen.dart';
@@ -31,12 +32,14 @@ class AppRoutes {
 
   static const String logoutConfirm = '/logout-confirm';
   static const String notificationSettings = '/notification-settings';
+  static const String changePassword = '/change-password'; // 🆕 Tambahan
 }
 
 GoRouter createRouter() {
   return GoRouter(
     initialLocation: AppRoutes.splash,
     routes: [
+      // 🟦 Halaman Awal
       GoRoute(
         path: AppRoutes.splash,
         builder: (_, __) => const SplashScreen(),
@@ -58,6 +61,7 @@ GoRouter createRouter() {
         builder: (_, __) => const SuccessScreen(),
       ),
 
+
       ShellRoute(
         builder: (context, state, child) => AppScaffold(child: child),
         routes: [
@@ -77,9 +81,14 @@ GoRouter createRouter() {
             path: AppRoutes.account,
             builder: (_, __) => const AccountPage(),
           ),
+          GoRoute(
+            path: AppRoutes.changePassword, // 🆕 route baru
+            builder: (_, __) => const ChangePasswordScreen(),
+          ),
         ],
       ),
 
+      // 🟨 Halaman lain tanpa bottom nav
       GoRoute(
         path: AppRoutes.notification,
         builder: (_, __) => const NotificationStaffPage(),
@@ -98,6 +107,7 @@ GoRouter createRouter() {
         child: Text(
           '404 - Page Not Found\n${state.uri.path}',
           textAlign: TextAlign.center,
+          style: const TextStyle(color: Colors.redAccent),
         ),
       ),
     ),

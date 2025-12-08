@@ -9,20 +9,24 @@ class AppScaffold extends StatelessWidget {
 
   const AppScaffold({super.key, required this.child});
 
-  /// Menentukan index menu berdasarkan lokasi router
+  // Menentukan index menu berdasarkan lokasi router
   int _indexFromLocation(String location) {
-    // Semua halaman profil termasuk /profile dan /account
+    // Semua halaman yang masih “bagian dari profil”
     if (location.startsWith(AppRoutes.profile) ||
-        location.startsWith(AppRoutes.account)) {
-      return 2;
+        location.startsWith(AppRoutes.account) ||
+        location.startsWith(AppRoutes.notificationSettings) ||
+        location.startsWith(AppRoutes.changePassword)) {
+      return 2; // Profil
     }
 
+    // Halaman riwayat
     if (location.startsWith(AppRoutes.history)) return 1;
 
-    return 0; // Default beranda
+    // Default: beranda
+    return 0;
   }
 
-  /// Navigasi bottom nav
+  // Navigasi bottom nav
   void _onNavTap(BuildContext context, int index) {
     switch (index) {
       case 0:
@@ -39,17 +43,12 @@ class AppScaffold extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Ambil lokasi route aktif
     final routerState = GoRouterState.of(context);
     final currentIndex = _indexFromLocation(routerState.uri.toString());
 
     return Scaffold(
       backgroundColor: const Color(0xFFF5F6FF),
-
-      // Tampilan halaman dinamis
       body: SafeArea(child: child),
-
-      // Bottom Navigation Bar (TIDAK DOUBLE)
       bottomNavigationBar: BottomNavBar(
         currentIndex: currentIndex,
         onTap: (i) => _onNavTap(context, i),

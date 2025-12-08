@@ -20,7 +20,7 @@ class _ProfilePageState extends State<ProfilePage> {
     showDialog(
       context: context,
       barrierDismissible: false,
-      barrierColor: Colors.black.withOpacity(0.5), // versi lama dipakai
+      barrierColor: Colors.black.withOpacity(0.5),
       builder: (dialogContext) {
         return Center(
           child: Material(
@@ -129,13 +129,22 @@ class _ProfilePageState extends State<ProfilePage> {
           Expanded(
             child: ListView(
               children: [
-                _menu("Informasi Akun", () => context.go(AppRoutes.account)),
+                _menu(
+                  "Informasi Akun",
+                      () => context.go(AppRoutes.account),
+                ),
                 _menu(
                   "Kelola Notifikasi",
                       () => context.go(AppRoutes.notificationSettings),
                 ),
-                _menu("Ganti Kata Sandi", () {}),
-                _menu("Keluar Akun", _showLogoutDialog),
+                _menu(
+                  "Ganti Kata Sandi",
+                      () => context.go(AppRoutes.changePassword), // ⬅️ ini yang penting
+                ),
+                _menu(
+                  "Keluar Akun",
+                  _showLogoutDialog,
+                ),
               ],
             ),
           ),
