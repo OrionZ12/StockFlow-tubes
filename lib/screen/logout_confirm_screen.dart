@@ -153,7 +153,7 @@ class LogoutConfirmScreen extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.pageBackground,
         borderRadius: BorderRadius.circular(30),
         border: Border.all(color: AppColors.softBorder),
         boxShadow: const [

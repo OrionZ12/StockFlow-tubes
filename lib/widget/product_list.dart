@@ -1,16 +1,36 @@
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../theme/app_colors.dart';
 
 class ProductList extends StatelessWidget {
   final List products;
 
+  /// products format:
+  /// [
+  ///   ["Mouse Wireless","Deskripsi...",54,"itemId123"],
+  ///   [...]
+  /// ]
   const ProductList({
     super.key,
     required this.products,
   });
 
-  void _showStockPopup(
-      BuildContext context, String name, String desc, int stock) {
+  Future<void> _updateStockInFirestore(
+      String itemId, String name, String desc, int newStock) async {
+    final user = FirebaseAuth.instance.currentUser;
+
+    await FirebaseFirestore.instance.collection("items").doc(itemId).set({
+      "name": name,
+      "desc": desc,
+      "stok": newStock,
+      "last_updated": FieldValue.serverTimestamp(),
+      "last_updated_by": user?.email ?? "unknown",
+    }, SetOptions(merge: true));
+  }
+
+  void _showStockPopup(BuildContext context, String name, String desc,
+      int stock, String itemId) {
     int newStock = stock;
     final controller = TextEditingController(text: stock.toString());
 
@@ -39,8 +59,8 @@ class ProductList extends StatelessWidget {
                   children: [
                     Text(
                       name,
-                      style:
-                      const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                      style: const TextStyle(
+                          fontSize: 22, fontWeight: FontWeight.bold),
                     ),
                     const SizedBox(height: 10),
 
@@ -84,7 +104,8 @@ class ProductList extends StatelessWidget {
                         ),
                         IconButton(
                           onPressed: () => updateStock(1, setState),
-                          icon: const Icon(Icons.add_circle_outline, size: 32),
+                          icon:
+                          const Icon(Icons.add_circle_outline, size: 32),
                         ),
                         IconButton(
                           onPressed: () => updateStock(10, setState),
@@ -105,9 +126,17 @@ class ProductList extends StatelessWidget {
                           borderRadius: BorderRadius.circular(14),
                         ),
                       ),
-                      onPressed: () {
+                      onPressed: () async {
                         Navigator.pop(context);
-                        print("Stock baru: $newStock");
+
+                        await _updateStockInFirestore(
+                            itemId, name, desc, newStock);
+
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text("Stok berhasil diperbarui!"),
+                          ),
+                        );
                       },
                       child: const Text("Simpan",
                           style:
@@ -135,7 +164,6 @@ class ProductList extends StatelessWidget {
 
         return Column(
           children: [
-            // HEADER
             Container(
               padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
               decoration: BoxDecoration(
@@ -174,7 +202,6 @@ class ProductList extends StatelessWidget {
 
             const SizedBox(height: 6),
 
-            // LIST PRODUK
             Expanded(
               child: ListView.separated(
                 itemCount: products.length,
@@ -183,6 +210,7 @@ class ProductList extends StatelessWidget {
                   final name = products[i][0];
                   final desc = products[i][1];
                   final qty = products[i][2];
+                  final itemId = products[i][3]; // <-- DOC ID
 
                   return _AnimatedProductTile(
                     width: width,
@@ -192,7 +220,8 @@ class ProductList extends StatelessWidget {
                     name: name,
                     desc: desc,
                     qty: qty,
-                    onTap: () => _showStockPopup(context, name, desc, qty),
+                    onTap: () => _showStockPopup(
+                        context, name, desc, qty, itemId),
                   );
                 },
               ),

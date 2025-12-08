@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 import '../provider/auth_provider.dart';
 import '../theme/app_colors.dart';
@@ -34,16 +35,6 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
-  final products = const [
-    ["Mouse Wireless", "Mouse Bluetooth 2.4GHz, warna hitam", 54],
-    ["Kabel USB", "Kabel USB-A ke USB-C, panjang 2 m", 44],
-    ["Keyboard Gaming", "Keyboard gaming mekanis dengan RGB", 23],
-    ["Monitor LED", "Full HD 24 inch, refresh rate 75Hz", 10],
-    ["Flashdisk", "USB 3.0 kapasitas 64GB, warna silver", 103],
-    ["Harddisk Eksternal", "USB 3.1 kapasitas 1TB, casing hitam", 88],
-    ["Powerbank", "10000mAh fast charging, warna putih", 98],
-  ];
-
   // ⬇ Popup Back Button
   Future<bool> _onWillPop() async {
     return await showDialog(
@@ -65,7 +56,8 @@ class _HomeScreenState extends State<HomeScreen> {
           ],
         );
       },
-    ) ?? false;
+    ) ??
+        false;
   }
 
   @override
@@ -78,7 +70,7 @@ class _HomeScreenState extends State<HomeScreen> {
     final role = auth.role;
 
     return WillPopScope(
-      onWillPop: _onWillPop,   // ⬅ Tambahkan ini
+      onWillPop: _onWillPop,
       child: SafeArea(
         child: Scaffold(
           backgroundColor: AppColors.pageBackground,
@@ -103,6 +95,9 @@ class _HomeScreenState extends State<HomeScreen> {
                     const SearchSection(),
                     SizedBox(height: h * 0.015),
 
+                    // ==============================
+                    //       STREAMBUILDER FIRESTORE
+                    // ==============================
                     Expanded(
                       child: Container(
                         padding: const EdgeInsets.all(16),
@@ -111,13 +106,50 @@ class _HomeScreenState extends State<HomeScreen> {
                           borderRadius: BorderRadius.circular(20),
                           border: Border.all(color: AppColors.softBorder),
                         ),
-                        child: ProductList(products: products),
+                        child: StreamBuilder<QuerySnapshot>(
+                          stream: FirebaseFirestore.instance
+                              .collection("items")
+                              .orderBy("name")
+                              .snapshots(),
+                          builder: (context, snapshot) {
+                            if (snapshot.connectionState ==
+                                ConnectionState.waiting) {
+                              return const Center(
+                                child: CircularProgressIndicator(),
+                              );
+                            }
+
+                            if (!snapshot.hasData ||
+                                snapshot.data!.docs.isEmpty) {
+                              return const Center(
+                                  child: Text(
+                                      "Belum ada data barang di database"));
+                            }
+
+                            // 🔥 Convert Firestore docs → List products
+                            final products = snapshot.data!.docs.map((doc) {
+                              final data = doc.data() as Map<String, dynamic>;
+
+                              return [
+                                data["name"] ?? "",
+                                data["desc"] ?? "",
+                                data["stok"] ?? 0,
+                                doc.id, // ⬅ penting!
+                              ];
+                            }).toList();
+
+                            return ProductList(products: products);
+                          },
+                        ),
                       ),
                     ),
                   ],
                 ),
               ),
 
+              // =============================
+              //         FLOATING BUTTON
+              // =============================
               if (role != "staff")
                 Positioned(
                   right: w * 0.04,
@@ -154,34 +186,6 @@ class _HomeScreenState extends State<HomeScreen> {
         icon: const Icon(Icons.add, color: AppColors.blueMain),
         iconSize: w * 0.07,
         onPressed: () {},
-      ),
-    );
-  }
-
-  Widget _roleButton(String role, double w) {
-    if (role == "staff") {
-      return _roleBtn(AppColors.blueMain, "Staff: Input Barang Masuk", w);
-    }
-    if (role == "whmanager") {
-      return _roleBtn(Colors.green, "Manager: Tambah Supplier", w);
-    }
-    return _roleBtn(Colors.orange, "Admin: Kelola Pengguna", w);
-  }
-
-  Widget _roleBtn(Color color, String text, double w) {
-    return ElevatedButton(
-      style: ElevatedButton.styleFrom(
-        backgroundColor: color,
-        foregroundColor: Colors.white,
-        padding: EdgeInsets.symmetric(vertical: w * 0.035),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(w * 0.04),
-        ),
-      ),
-      onPressed: () {},
-      child: Text(
-        text,
-        style: TextStyle(fontSize: w * 0.04),
       ),
     );
   }
