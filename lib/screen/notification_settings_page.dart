@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+
 import '../widget/bottom_nav_bar.dart';
+import '../config/routes.dart';
 
 class NotificationSettingsPage extends StatefulWidget {
   const NotificationSettingsPage({super.key});
@@ -12,6 +14,8 @@ class NotificationSettingsPage extends StatefulWidget {
 
 class _NotificationSettingsPageState extends State<NotificationSettingsPage> {
   bool isVibrationOn = false;
+
+  // Tab Profil tetap aktif
   int _selectedIndex = 2;
 
   void _onNavTap(int index) {
@@ -21,13 +25,13 @@ class _NotificationSettingsPageState extends State<NotificationSettingsPage> {
 
     switch (index) {
       case 0:
-        context.go('/home');
+        context.go(AppRoutes.home);
         break;
       case 1:
-        context.go('/history');
+        context.go(AppRoutes.history);
         break;
       case 2:
-        context.go('/profile');
+        context.go(AppRoutes.profile);
         break;
     }
   }
@@ -35,17 +39,20 @@ class _NotificationSettingsPageState extends State<NotificationSettingsPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      // 🔹 SAMAKAN DENGAN HALAMAN LAIN (ganti ke E6EDFE)
       backgroundColor: const Color(0xFFE6EDFE),
+
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // ===== HEADER: Back + StockFlow =====
               Row(
                 children: [
                   GestureDetector(
-                    onTap: () => context.go('/profile'),
+                    onTap: () => context.go(AppRoutes.profile),
                     child: Container(
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
@@ -74,7 +81,10 @@ class _NotificationSettingsPageState extends State<NotificationSettingsPage> {
                   ),
                 ],
               ),
+
               const SizedBox(height: 40),
+
+              // ===== CARD "Aktifkan Getaran" =====
               Container(
                 decoration: BoxDecoration(
                   color: Colors.white,
@@ -100,14 +110,18 @@ class _NotificationSettingsPageState extends State<NotificationSettingsPage> {
                         color: Colors.black87,
                       ),
                     ),
+
+                    // ===== TOGGLE ON / OFF =====
                     GestureDetector(
                       onTap: () {
                         setState(() => isVibrationOn = !isVibrationOn);
                       },
                       child: AnimatedContainer(
                         duration: const Duration(milliseconds: 250),
-                        width: 70,
-                        height: 30,
+                        width: 80,        // lebih lebar
+                        height: 32,
+                        padding:
+                        const EdgeInsets.symmetric(horizontal: 6), // ruang
                         decoration: BoxDecoration(
                           color: isVibrationOn
                               ? Colors.green.shade400
@@ -122,36 +136,31 @@ class _NotificationSettingsPageState extends State<NotificationSettingsPage> {
                               alignment: isVibrationOn
                                   ? Alignment.centerRight
                                   : Alignment.centerLeft,
-                              child: Padding(
-                                padding:
-                                const EdgeInsets.symmetric(horizontal: 4),
-                                child: Container(
-                                  width: 22,
-                                  height: 22,
-                                  decoration: const BoxDecoration(
-                                    color: Colors.white,
-                                    shape: BoxShape.circle,
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: Colors.black26,
-                                        blurRadius: 3,
-                                        offset: Offset(0, 1),
-                                      ),
-                                    ],
-                                  ),
+                              child: Container(
+                                width: 22,
+                                height: 22,
+                                decoration: const BoxDecoration(
+                                  color: Colors.white,
+                                  shape: BoxShape.circle,
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black26,
+                                      blurRadius: 3,
+                                      offset: Offset(0, 1),
+                                    ),
+                                  ],
                                 ),
                               ),
                             ),
-                            // Tulisan ON / OFF tidak ketutup
-                            Align(
-                              alignment: Alignment.center,
+                            // Tulisan ON / OFF di tengah, nggak ketutup
+                            Center(
                               child: Text(
                                 isVibrationOn ? "ON" : "OFF",
                                 style: const TextStyle(
                                   color: Colors.white,
                                   fontWeight: FontWeight.bold,
-                                  fontSize: 12,
-                                  letterSpacing: 0.5,
+                                  fontSize: 11,
+                                  letterSpacing: 0.8,
                                 ),
                               ),
                             ),
@@ -166,6 +175,8 @@ class _NotificationSettingsPageState extends State<NotificationSettingsPage> {
           ),
         ),
       ),
+
+      // Bottom nav, tab Profil aktif
       bottomNavigationBar: BottomNavBar(
         currentIndex: _selectedIndex,
         onTap: _onNavTap,
