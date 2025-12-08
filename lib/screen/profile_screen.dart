@@ -121,34 +121,66 @@ class _ProfilePageState extends State<ProfilePage> {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: Column(
-        children: [
-          const SizedBox(height: 40),
-          Expanded(
-            child: ListView(
-              children: [
-                _menu(
-                  "Informasi Akun",
-                      () => context.go(AppRoutes.account),
+    return Scaffold(
+      backgroundColor: const Color(0xFFE6EDFE),
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: Column(
+            children: [
+              const SizedBox(height: 16),
+
+              // Header StockFlow kanan atas
+              Row(
+                children: const [
+                  Spacer(),
+                  Text(
+                    'Stock',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.black,
+                    ),
+                  ),
+                  Text(
+                    'Flow',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xFF5A6ACF),
+                    ),
+                  ),
+                ],
+              ),
+
+              const SizedBox(height: 40),
+
+              // List menu
+              Expanded(
+                child: ListView(
+                  children: [
+                    _menu(
+                      "Informasi Akun",
+                          () => context.go(AppRoutes.account),
+                    ),
+                    _menu(
+                      "Kelola Notifikasi",
+                          () => context.go(AppRoutes.notificationSettings),
+                    ),
+                    _menu(
+                      "Ganti Kata Sandi",
+                          () => context.go(AppRoutes.changePassword),
+                    ),
+                    _menu(
+                      "Keluar Akun",
+                      _showLogoutDialog,
+                    ),
+                  ],
                 ),
-                _menu(
-                  "Kelola Notifikasi",
-                      () => context.go(AppRoutes.notificationSettings),
-                ),
-                _menu(
-                  "Ganti Kata Sandi",
-                      () => context.go(AppRoutes.changePassword), // ⬅️ ini yang penting
-                ),
-                _menu(
-                  "Keluar Akun",
-                  _showLogoutDialog,
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
