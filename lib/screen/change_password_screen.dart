@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import '../config/routes.dart'; // ⬅️ penting biar bisa pakai AppRoutes
 
 class ChangePasswordScreen extends StatefulWidget {
   const ChangePasswordScreen({super.key});
@@ -25,7 +26,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
               Row(
                 children: [
                   GestureDetector(
-                    onTap: () => context.go('/profile'),
+                    onTap: () => context.go(AppRoutes.profile),
                     child: Container(
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
@@ -71,7 +72,8 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
               // FORM
               Container(
                 width: width,
-                padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 12),
+                padding:
+                const EdgeInsets.symmetric(vertical: 14, horizontal: 12),
                 decoration: BoxDecoration(
                   color: Colors.transparent,
                   borderRadius: BorderRadius.circular(20),
@@ -90,7 +92,10 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                       width: width * 0.6,
                       height: 46,
                       child: ElevatedButton(
-                        onPressed: () {},
+                        // ⬇️ ketika diklik, pindah ke halaman konfirmasi
+                        onPressed: () {
+                          context.go(AppRoutes.changePasswordSuccess);
+                        },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: const Color(0xFF5A6ACF),
                           shape: RoundedRectangleBorder(
@@ -115,7 +120,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
           ),
         ),
       ),
-      // TIDAK ADA bottomNavigationBar di sini
+      // tidak ada bottomNavigationBar di sini
     );
   }
 

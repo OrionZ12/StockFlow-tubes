@@ -9,7 +9,7 @@ import 'package:tubes/screen/signup_screen.dart';
 import 'package:tubes/screen/logout_confirm_screen.dart';
 import 'package:tubes/screen/notification_settings_page.dart';
 import 'package:tubes/screen/change_password_screen.dart';
-
+import 'package:tubes/screen/change_password_success_screen.dart';
 import '../screen/splash_screen.dart';
 import '../screen/firstime_screen.dart';
 import '../screen/login_screen.dart';
@@ -32,7 +32,8 @@ class AppRoutes {
 
   static const String logoutConfirm = '/logout-confirm';
   static const String notificationSettings = '/notification-settings';
-  static const String changePassword = '/change-password'; // 🆕 Tambahan
+  static const String changePassword = '/change-password';
+  static const String changePasswordSuccess = '/change-password-success';
 }
 
 GoRouter createRouter() {
@@ -61,7 +62,7 @@ GoRouter createRouter() {
         builder: (_, __) => const SuccessScreen(),
       ),
 
-
+      // 🟩 Halaman utama dengan bottom nav bar
       ShellRoute(
         builder: (context, state, child) => AppScaffold(child: child),
         routes: [
@@ -82,7 +83,7 @@ GoRouter createRouter() {
             builder: (_, __) => const AccountPage(),
           ),
           GoRoute(
-            path: AppRoutes.changePassword, // 🆕 route baru
+            path: AppRoutes.changePassword,
             builder: (_, __) => const ChangePasswordScreen(),
           ),
         ],
@@ -100,6 +101,10 @@ GoRouter createRouter() {
       GoRoute(
         path: AppRoutes.notificationSettings,
         builder: (_, __) => const NotificationSettingsPage(),
+      ),
+      GoRoute(
+        path: AppRoutes.changePasswordSuccess,
+        builder: (_, __) => const ChangePasswordSuccessScreen(),
       ),
     ],
     errorBuilder: (context, state) => Scaffold(
