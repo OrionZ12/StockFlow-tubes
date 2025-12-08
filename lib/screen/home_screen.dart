@@ -44,6 +44,30 @@ class _HomeScreenState extends State<HomeScreen> {
     ["Powerbank", "10000mAh fast charging, warna putih", 98],
   ];
 
+  // ⬇ Popup Back Button
+  Future<bool> _onWillPop() async {
+    return await showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text("Keluar Aplikasi"),
+          content: const Text("Apakah kamu yakin ingin keluar?"),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: const Text("Tidak"),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              child: const Text("Ya"),
+            ),
+          ],
+        );
+      },
+    ) ?? false;
+  }
+
   @override
   Widget build(BuildContext context) {
     final screen = MediaQuery.of(context).size;
@@ -53,87 +77,86 @@ class _HomeScreenState extends State<HomeScreen> {
     final auth = context.watch<AuthProvider>();
     final role = auth.role;
 
-    return SafeArea(
-      child: Scaffold(
-        backgroundColor: AppColors.pageBackground,
-        body: Stack(
-          children: [
-            Padding(
-              padding: EdgeInsets.fromLTRB(
-                w * 0.04,
-                h * 0.02,
-                w * 0.04,
-                h * 0.03,
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const HeaderWidget(),
-                  SizedBox(height: h * 0.015),
+    return WillPopScope(
+      onWillPop: _onWillPop,   // ⬅ Tambahkan ini
+      child: SafeArea(
+        child: Scaffold(
+          backgroundColor: AppColors.pageBackground,
+          body: Stack(
+            children: [
+              Padding(
+                padding: EdgeInsets.fromLTRB(
+                  w * 0.04,
+                  h * 0.02,
+                  w * 0.04,
+                  h * 0.03,
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const HeaderWidget(),
+                    SizedBox(height: h * 0.015),
 
-                  const UpdateSection(),
-                  SizedBox(height: h * 0.015),
+                    const UpdateSection(),
+                    SizedBox(height: h * 0.015),
 
-                  const SearchSection(),
-                  SizedBox(height: h * 0.015),
+                    const SearchSection(),
+                    SizedBox(height: h * 0.015),
 
-                  // ⬇ Kotak putih besar + scroll list
-                  Expanded(
-                    child: Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(color: AppColors.softBorder),
+                    Expanded(
+                      child: Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(color: AppColors.softBorder),
+                        ),
+                        child: ProductList(products: products),
                       ),
-                      child: ProductList(products: products),
                     ),
-                  ),
-                ],
-              ),
-            ),
-
-            // Floating Button untuk tanda tambah 
-            Positioned(
-              right: w * 0.04,
-              bottom: h * 0.02,
-              child: _floatingButton(w),
-            ),
-
-            // Role button
-            if (showRoleButton)
-              Positioned(
-                left: w * 0.04,
-                right: w * 0.04,
-                bottom: h * 0.05,     // naik sedikit dari navbar
-                child: RoleButton(
-                  role: role,
-                  width: w,
+                  ],
                 ),
               ),
 
-          ],
+              if (role != "staff")
+                Positioned(
+                  right: w * 0.04,
+                  bottom: h * 0.02,
+                  child: _floatingButton(w),
+                ),
+
+              if (showRoleButton)
+                Positioned(
+                  left: w * 0.04,
+                  right: w * 0.04,
+                  bottom: h * 0.05,
+                  child: RoleButton(
+                    role: role,
+                    width: w,
+                  ),
+                ),
+            ],
+          ),
         ),
       ),
     );
   }
 
-Widget _floatingButton(double w) {
-  return Container(
-    width: w * 0.15,
-    height: w * 0.15,
-    decoration: BoxDecoration( // ← BUANG const
-      color: const Color.fromARGB(255, 255, 255, 255).withOpacity(0.9),
-      shape: BoxShape.circle,
-    ),
-    child: IconButton(
-      icon: const Icon(Icons.add, color: AppColors.blueMain),
-      iconSize: w * 0.07,
-      onPressed: () {},
-    ),
-  );
-}
-
+  Widget _floatingButton(double w) {
+    return Container(
+      width: w * 0.15,
+      height: w * 0.15,
+      decoration: BoxDecoration(
+        color: const Color.fromARGB(255, 255, 255, 255).withOpacity(0.9),
+        shape: BoxShape.circle,
+      ),
+      child: IconButton(
+        icon: const Icon(Icons.add, color: AppColors.blueMain),
+        iconSize: w * 0.07,
+        onPressed: () {},
+      ),
+    );
+  }
 
   Widget _roleButton(String role, double w) {
     if (role == "staff") {
