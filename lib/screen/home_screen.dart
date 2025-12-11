@@ -44,8 +44,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _loadCategories() async {
   final uid = FirebaseAuth.instance.currentUser!.uid;
-  final doc =
-      await FirebaseFirestore.instance.collection("users").doc(uid).get();
+  final doc = await FirebaseFirestore.instance.collection("users").doc(uid).get();
 
   if (doc.exists && doc.data()!.containsKey("categories")) {
     kategoriList = List<String>.from(doc["categories"]);

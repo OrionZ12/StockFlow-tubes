@@ -28,6 +28,7 @@ class _AddStockPageState extends State<AddStockPage> {
     dateCtrl.text = DateFormat("dd-MM-yyyy").format(DateTime.now());
     _loadCategories();
   }
+
   Future<void> _saveItem() async {
     try {
       final name = nameCtrl.text.trim();
@@ -45,34 +46,64 @@ class _AddStockPageState extends State<AddStockPage> {
         return;
       }
 
-      await FirebaseFirestore.instance.collection("items").add({
-        "name": name,
-        "desc": desc,
-        "stok": jumlah,
-        "category": kategoriDipilih,
-        "supplier": supplier,
-        "date": date,
-        "last_updated": FieldValue.serverTimestamp(),
-        "last_updated_by": FirebaseAuth.instance.currentUser?.email ?? "unknown"
-      });
+      // 🔥 CEK APAKAH SUDAH ADA ITEM DENGAN NAMA YANG SAMA
+      final query = await FirebaseFirestore.instance
+          .collection("items")
+          .where("name", isEqualTo: name)
+          .get();
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("Item berhasil disimpan!"),
-          backgroundColor: Colors.green,
-        ),
-      );
+      if (query.docs.isNotEmpty) {
+        // 🚀 KALAU ADA → UPDATE STOK
+        final doc = query.docs.first;
+        final stokLama = doc["stok"] ?? 0;
 
-      // ⬇️ FIX: langsung ke home
-      context.go('/home');
+        await doc.reference.update({
+          "stok": stokLama + jumlah,
+          "desc": desc,
+          "category": kategoriDipilih,
+          "supplier": supplier,
+          "date": date,
+          "last_updated": FieldValue.serverTimestamp(),
+          "last_updated_by":
+              FirebaseAuth.instance.currentUser?.email ?? "unknown",
+        });
 
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("Stok diperbarui menjadi ${stokLama + jumlah}!"),
+            backgroundColor: Colors.green,
+          ),
+        );
+      } else {
+        // 🚀 KALAU TIDAK ADA → BUAT ITEM BARU
+        await FirebaseFirestore.instance.collection("items").add({
+          "name": name,
+          "desc": desc,
+          "stok": jumlah,
+          "category": kategoriDipilih,
+          "supplier": supplier,
+          "date": date,
+          "last_updated": FieldValue.serverTimestamp(),
+          "last_updated_by":
+              FirebaseAuth.instance.currentUser?.email ?? "unknown"
+        });
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text("Item baru berhasil disimpan!"),
+            backgroundColor: Colors.green,
+          ),
+        );
+
+        // ⬇️ FIX: langsung ke home
+        context.go('/home');
+      }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("Gagal menyimpan: $e")),
       );
     }
   }
-
 
   // =====================================================
   // LOAD KATEGORI
@@ -86,7 +117,6 @@ class _AddStockPageState extends State<AddStockPage> {
     kategoriList = snap.docs.map((d) => d["name"] as String).toList();
     setState(() {});
   }
-
 
   // =====================================================
   // TAMBAH KATEGORI
@@ -136,7 +166,7 @@ class _AddStockPageState extends State<AddStockPage> {
               // TAMBAH KE LIST
               kategoriList.add(newCat);
               kategoriList.sort(
-                    (a, b) => a.toLowerCase().compareTo(b.toLowerCase()),
+                (a, b) => a.toLowerCase().compareTo(b.toLowerCase()),
               );
 
               // SIMPAN KE FIRESTORE
@@ -156,7 +186,6 @@ class _AddStockPageState extends State<AddStockPage> {
       ),
     );
   }
-
 
   // =====================================================
   // HAPUS KATEGORI
@@ -181,7 +210,6 @@ class _AddStockPageState extends State<AddStockPage> {
 
     setState(() {});
   }
-
 
   // =====================================================
   // POPUP KONFIRMASI DELETE
@@ -245,7 +273,6 @@ class _AddStockPageState extends State<AddStockPage> {
               const Text("Pilih Kategori",
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
               const SizedBox(height: 10),
-
               Expanded(
                 child: StreamBuilder(
                   stream: FirebaseFirestore.instance
@@ -270,16 +297,13 @@ class _AddStockPageState extends State<AddStockPage> {
                             setState(() => kategoriDipilih = nama);
                             Navigator.pop(context);
                           },
-
-                          onLongPress: () =>
-                              _confirmDeleteCategory(nama),
+                          onLongPress: () => _confirmDeleteCategory(nama),
                         );
                       },
                     );
                   },
                 ),
               ),
-
               Container(
                 width: double.infinity,
                 padding: const EdgeInsets.all(12),
@@ -305,7 +329,6 @@ class _AddStockPageState extends State<AddStockPage> {
       },
     );
   }
-
 
   // =====================================================
   // UI DROPDOWN

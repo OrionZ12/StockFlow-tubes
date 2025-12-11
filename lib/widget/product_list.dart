@@ -25,6 +25,39 @@ class ProductList extends StatelessWidget {
     }, SetOptions(merge: true));
   }
 
+  Future<void> _deleteItem(BuildContext context, String itemId) async {
+    await FirebaseFirestore.instance.collection("items").doc(itemId).delete();
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text("Barang berhasil dihapus!")),
+    );
+  }
+
+  void _showDeleteConfirmation(
+      BuildContext context, String itemId, String name) {
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text("Hapus Barang"),
+        content: Text("Apakah Anda yakin ingin menghapus \"$name\"?"),
+        actions: [
+          TextButton(
+            child: const Text("Batal"),
+            onPressed: () => Navigator.pop(context),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            child: const Text("Hapus", style: TextStyle(color: Colors.white)),
+            onPressed: () async {
+              Navigator.pop(context);
+              await _deleteItem(context, itemId);
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
   void _showStockPopup(BuildContext context, String name, String desc,
       int stock, String itemId) {
     int newStock = stock;
@@ -59,11 +92,9 @@ class ProductList extends StatelessWidget {
                           fontSize: 22, fontWeight: FontWeight.bold),
                     ),
                     const SizedBox(height: 10),
-
                     Text("Stok terakhir: $stock",
                         style: const TextStyle(fontSize: 16)),
                     const SizedBox(height: 20),
-
                     SizedBox(
                       width: 130,
                       child: TextField(
@@ -82,9 +113,7 @@ class ProductList extends StatelessWidget {
                         ),
                       ),
                     ),
-
                     const SizedBox(height: 20),
-
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
@@ -95,13 +124,12 @@ class ProductList extends StatelessWidget {
                         ),
                         IconButton(
                           onPressed: () => updateStock(-1, setState),
-                          icon: const Icon(Icons.remove_circle_outline,
-                              size: 32),
+                          icon:
+                              const Icon(Icons.remove_circle_outline, size: 32),
                         ),
                         IconButton(
                           onPressed: () => updateStock(1, setState),
-                          icon:
-                          const Icon(Icons.add_circle_outline, size: 32),
+                          icon: const Icon(Icons.add_circle_outline, size: 32),
                         ),
                         IconButton(
                           onPressed: () => updateStock(10, setState),
@@ -110,9 +138,7 @@ class ProductList extends StatelessWidget {
                         ),
                       ],
                     ),
-
                     const SizedBox(height: 20),
-
                     ElevatedButton(
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.blue,
@@ -135,8 +161,7 @@ class ProductList extends StatelessWidget {
                         );
                       },
                       child: const Text("Simpan",
-                          style:
-                          TextStyle(color: Colors.white, fontSize: 18)),
+                          style: TextStyle(color: Colors.white, fontSize: 18)),
                     ),
                   ],
                 ),
@@ -195,9 +220,7 @@ class ProductList extends StatelessWidget {
                 ],
               ),
             ),
-
             const SizedBox(height: 6),
-
             Expanded(
               child: ListView.separated(
                 itemCount: products.length,
@@ -216,8 +239,9 @@ class ProductList extends StatelessWidget {
                     name: name,
                     desc: desc,
                     qty: qty,
-                    onTap: () => _showStockPopup(
-                        context, name, desc, qty, itemId),
+                    itemId: itemId,
+                    onTap: () =>
+                        _showStockPopup(context, name, desc, qty, itemId),
                   );
                 },
               ),
@@ -242,6 +266,7 @@ class _AnimatedProductTile extends StatefulWidget {
   final String name;
   final String desc;
   final int qty;
+  final String itemId;
 
   final VoidCallback onTap;
 
@@ -254,6 +279,7 @@ class _AnimatedProductTile extends StatefulWidget {
     required this.desc,
     required this.qty,
     required this.onTap,
+    required this.itemId,
   });
 
   @override
@@ -291,6 +317,43 @@ class _AnimatedProductTileState extends State<_AnimatedProductTile> {
             splashColor: AppColors.blueMain.withOpacity(0.12),
             highlightColor: AppColors.blueMain.withOpacity(0.08),
             onTap: widget.onTap,
+            onLongPress: () {
+  final id = widget.itemId;
+  final name = widget.name;
+
+  showDialog(
+    context: context,
+    builder: (ctx) => AlertDialog(
+      title: const Text("Hapus Barang"),
+      content: Text("Apakah Anda yakin ingin menghapus \"$name\"?"),
+      actions: [
+        TextButton(
+          child: const Text("Batal"),
+          onPressed: () => Navigator.pop(ctx),
+        ),
+        ElevatedButton(
+          style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+          child: const Text("Hapus", style: TextStyle(color: Colors.white)),
+          onPressed: () async {
+            Navigator.pop(ctx);
+
+            await FirebaseFirestore.instance
+                .collection("items")
+                .doc(id)
+                .delete();
+
+            if (context.mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text("$name dihapus!")),
+              );
+            }
+          },
+        ),
+      ],
+    ),
+  );
+},
+
             child: Container(
               padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
               decoration: BoxDecoration(
@@ -325,7 +388,6 @@ class _AnimatedProductTileState extends State<_AnimatedProductTile> {
                       ],
                     ),
                   ),
-
                   Expanded(
                     flex: 1,
                     child: Align(
