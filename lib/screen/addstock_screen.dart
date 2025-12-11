@@ -18,6 +18,7 @@ class _AddStockPageState extends State<AddStockPage> {
   final TextEditingController supplierCtrl = TextEditingController();
   final TextEditingController descCtrl = TextEditingController();
 
+
   int jumlah = 1;
   List<String> kategoriList = [];
   String? kategoriDipilih;

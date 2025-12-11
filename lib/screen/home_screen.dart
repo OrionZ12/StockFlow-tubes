@@ -33,6 +33,7 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
 
+    // popup role button ilang setelah 3 detik
     Future.delayed(const Duration(seconds: 3), () {
       if (mounted) {
         setState(() {
@@ -40,43 +41,46 @@ class _HomeScreenState extends State<HomeScreen> {
         });
       }
     });
+
+    // load kategori user (kalau ada)
+    _loadCategories();
   }
 
   Future<void> _loadCategories() async {
-  final uid = FirebaseAuth.instance.currentUser!.uid;
-  final doc =
-      await FirebaseFirestore.instance.collection("users").doc(uid).get();
+    final uid = FirebaseAuth.instance.currentUser!.uid;
+    final doc =
+    await FirebaseFirestore.instance.collection("users").doc(uid).get();
 
-  if (doc.exists && doc.data()!.containsKey("categories")) {
-    kategoriList = List<String>.from(doc["categories"]);
-    kategoriList.sort((a, b) => a.compareTo(b)); // 🔥 sort A–Z
+    if (doc.exists && doc.data()!.containsKey("categories")) {
+      kategoriList = List<String>.from(doc["categories"]);
+      kategoriList.sort((a, b) => a.compareTo(b)); // 🔥 sort A–Z
+    }
+
+    setState(() {});
   }
-
-  setState(() {});
-}
 
   // ⬇ Popup Back Button
   Future<bool> _onWillPop() async {
     return await showDialog(
-          context: context,
-          barrierDismissible: false,
-          builder: (context) {
-            return AlertDialog(
-              title: const Text("Keluar Aplikasi"),
-              content: const Text("Apakah kamu yakin ingin keluar?"),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.of(context).pop(false),
-                  child: const Text("Tidak"),
-                ),
-                ElevatedButton(
-                  onPressed: () => Navigator.of(context).pop(true),
-                  child: const Text("Ya"),
-                ),
-              ],
-            );
-          },
-        ) ??
+      context: context,
+      barrierDismissible: false,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text("Keluar Aplikasi"),
+          content: const Text("Apakah kamu yakin ingin keluar?"),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: const Text("Tidak"),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              child: const Text("Ya"),
+            ),
+          ],
+        );
+      },
+    ) ??
         false;
   }
 
@@ -112,6 +116,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     const UpdateSection(),
                     SizedBox(height: h * 0.015),
 
+                    // 🔍 SEARCH + KATEGORI
                     SearchSection(
                       kategoriList: kategoriList,
                       onSearchChanged: (value) {
@@ -150,13 +155,51 @@ class _HomeScreenState extends State<HomeScreen> {
                             if (!snapshot.hasData ||
                                 snapshot.data!.docs.isEmpty) {
                               return const Center(
-                                  child: Text(
-                                      "Belum ada data barang di database"));
+                                child: Text(
+                                  "Belum ada data barang di database",
+                                ),
+                              );
+                            }
+
+                            final allDocs = snapshot.data!.docs;
+
+                            // 🔍 FILTER: berdasarkan nama & kategori
+                            final filteredDocs = allDocs.where((doc) {
+                              final data =
+                              doc.data() as Map<String, dynamic>;
+
+                              final name = (data["name"] ?? "")
+                                  .toString()
+                                  .toLowerCase();
+                              final category =
+                              (data["category"] ?? "").toString();
+
+                              // filter nama
+                              final matchName = searchText.isEmpty
+                                  ? true
+                                  : name.contains(searchText);
+
+                              // filter kategori
+                              final matchCategory =
+                              selectedCategory == "Semua Kategori"
+                                  ? true
+                                  : category == selectedCategory;
+
+                              return matchName && matchCategory;
+                            }).toList();
+
+                            if (filteredDocs.isEmpty) {
+                              return const Center(
+                                child: Text(
+                                  "Produk dengan kriteria tersebut tidak ditemukan",
+                                ),
+                              );
                             }
 
                             // 🔥 Convert Firestore docs → List products
-                            final products = snapshot.data!.docs.map((doc) {
-                              final data = doc.data() as Map<String, dynamic>;
+                            final products = filteredDocs.map((doc) {
+                              final data =
+                              doc.data() as Map<String, dynamic>;
 
                               return [
                                 data["name"] ?? "",
