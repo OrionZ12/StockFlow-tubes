@@ -10,6 +10,9 @@ class ItemService {
     required String name,
     required String desc,
     required int stok,
+    required String category,
+    required String supplier,
+    required String date,
   }) async {
     final user = FirebaseAuth.instance.currentUser;
 
@@ -17,6 +20,9 @@ class ItemService {
       'name': name,
       'desc': desc,
       'stok': stok,
+      'category': category,           // kategori sekarang text biasa
+      'supplier': supplier,
+      'date': date,
       'last_updated': FieldValue.serverTimestamp(),
       'last_updated_by': user?.email ?? "unknown",
     });
@@ -28,6 +34,9 @@ class ItemService {
     required String name,
     required String desc,
     required int stok,
+    required String category,
+    required String supplier,
+    required String date,
   }) async {
     final user = FirebaseAuth.instance.currentUser;
 
@@ -35,8 +44,41 @@ class ItemService {
       'name': name,
       'desc': desc,
       'stok': stok,
+      'category': category,          // tetap text
+      'supplier': supplier,
+      'date': date,
       'last_updated': FieldValue.serverTimestamp(),
       'last_updated_by': user?.email ?? "unknown",
     }, SetOptions(merge: true));
+  }
+}
+
+/// =======================================================
+///  🔥 CATEGORY SERVICE — kategori dipindah ke collection baru
+/// =======================================================
+class CategoryService {
+  final CollectionReference catRef =
+  FirebaseFirestore.instance.collection('categories');
+
+  /// Ambil semua kategori (sorted)
+  Future<List<String>> getCategories() async {
+    final snap = await catRef.orderBy('name').get();
+
+    return snap.docs.map((d) => d['name'] as String).toList();
+  }
+
+  /// Tambah kategori baru
+  Future<void> addCategory(String name) async {
+    await catRef.add({'name': name});
+  }
+
+  /// Hapus kategori berdasarkan nama
+  Future<void> deleteCategory(String name) async {
+    final snap =
+    await catRef.where('name', isEqualTo: name).limit(1).get();
+
+    if (snap.docs.isEmpty) return;
+
+    await catRef.doc(snap.docs.first.id).delete();
   }
 }

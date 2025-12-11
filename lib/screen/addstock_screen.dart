@@ -28,24 +28,63 @@ class _AddStockPageState extends State<AddStockPage> {
     dateCtrl.text = DateFormat("dd-MM-yyyy").format(DateTime.now());
     _loadCategories();
   }
+  Future<void> _saveItem() async {
+    try {
+      final name = nameCtrl.text.trim();
+      final desc = descCtrl.text.trim();
+      final supplier = supplierCtrl.text.trim();
+      final date = dateCtrl.text.trim();
+
+      if (name.isEmpty || kategoriDipilih == null || supplier.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text("Pastikan semua field wajib terisi!"),
+            backgroundColor: Colors.red,
+          ),
+        );
+        return;
+      }
+
+      await FirebaseFirestore.instance.collection("items").add({
+        "name": name,
+        "desc": desc,
+        "stok": jumlah,
+        "category": kategoriDipilih,
+        "supplier": supplier,
+        "date": date,
+        "last_updated": FieldValue.serverTimestamp(),
+        "last_updated_by": FirebaseAuth.instance.currentUser?.email ?? "unknown"
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Item berhasil disimpan!"),
+          backgroundColor: Colors.green,
+        ),
+      );
+
+      if (context.canPop()) context.pop();
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Gagal menyimpan: $e")),
+      );
+    }
+  }
+
 
   // =====================================================
   // LOAD KATEGORI
   // =====================================================
   Future<void> _loadCategories() async {
-    final uid = FirebaseAuth.instance.currentUser!.uid;
-    final doc =
-        await FirebaseFirestore.instance.collection("users").doc(uid).get();
+    final snap = await FirebaseFirestore.instance
+        .collection("categories")
+        .orderBy("name")
+        .get();
 
-    if (doc.exists && doc.data()!.containsKey("categories")) {
-      kategoriList = List<String>.from(doc["categories"]);
-    } else {
-      kategoriList = [];
-    }
-
-    kategoriList.sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
+    kategoriList = snap.docs.map((d) => d["name"] as String).toList();
     setState(() {});
   }
+
 
   // =====================================================
   // TAMBAH KATEGORI
@@ -74,13 +113,13 @@ class _AddStockPageState extends State<AddStockPage> {
             child: const Text("Simpan"),
             style: ElevatedButton.styleFrom(
               foregroundColor: AppColors.blueTitle,
-              backgroundColor: const Color.fromARGB(255, 108, 227, 112),
+              backgroundColor: Color.fromARGB(255, 108, 227, 112),
             ),
             onPressed: () async {
               final newCat = catCtrl.text.trim();
               if (newCat.isEmpty) return;
 
-            // CEK DUPLIKAT
+              // CEK DUPLIKAT LIST LOKAL
               if (kategoriList.contains(newCat)) {
                 Navigator.pop(context);
                 ScaffoldMessenger.of(context).showSnackBar(
@@ -92,19 +131,23 @@ class _AddStockPageState extends State<AddStockPage> {
                 return;
               }
 
+              // TAMBAH KE LIST
               kategoriList.add(newCat);
-              kategoriList.sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
+              kategoriList.sort(
+                    (a, b) => a.toLowerCase().compareTo(b.toLowerCase()),
+              );
 
-              final uid = FirebaseAuth.instance.currentUser!.uid;
+              // SIMPAN KE FIRESTORE
               await FirebaseFirestore.instance
-                  .collection("users")
-                  .doc(uid)
-                  .update({"categories": kategoriList});
+                  .collection("categories")
+                  .add({"name": newCat});
 
-              kategoriDipilih = newCat;
+              // AGAR DROPDOWN OTOMATIS PINDAH KE KATEGORI TERBARU
+              setState(() {
+                kategoriDipilih = newCat;
+              });
 
-              Navigator.pop(context); // tutup popup
-              setState(() {});
+              Navigator.pop(context); // Tutup popup
             },
           ),
         ],
@@ -112,26 +155,31 @@ class _AddStockPageState extends State<AddStockPage> {
     );
   }
 
+
   // =====================================================
   // HAPUS KATEGORI
   // =====================================================
   Future<void> _hapusKategori(String category) async {
-    final uid = FirebaseAuth.instance.currentUser!.uid;
-
+    // Hapus dari lokal list
     kategoriList.remove(category);
     kategoriList.sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
 
-    await FirebaseFirestore.instance
-        .collection("users")
-        .doc(uid)
-        .update({"categories": kategoriList});
+    // Hapus dari Firestore (cari dokumen dengan nama yg cocok)
+    final snap = await FirebaseFirestore.instance
+        .collection("categories")
+        .where("name", isEqualTo: category)
+        .get();
 
-    if (kategoriDipilih == category) {
-      kategoriDipilih = null;
+    for (var doc in snap.docs) {
+      await doc.reference.delete();
     }
+
+    // Reset dropdown jika kategori yg dipilih barusan dihapus
+    if (kategoriDipilih == category) kategoriDipilih = null;
 
     setState(() {});
   }
+
 
   // =====================================================
   // POPUP KONFIRMASI DELETE
@@ -179,79 +227,83 @@ class _AddStockPageState extends State<AddStockPage> {
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (_) {
-        return StatefulBuilder(
-          builder: (context, setModalState) {
-            return SizedBox(
-              height: 360,
-              child: Column(
-                children: [
-                  const SizedBox(height: 12),
-                  Container(
-                    width: 40,
-                    height: 5,
-                    decoration: BoxDecoration(
-                        color: Colors.grey[400],
-                        borderRadius: BorderRadius.circular(10)),
-                  ),
-                  const SizedBox(height: 12),
-                  const Text("Pilih Kategori",
-                      style:
-                          TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 10),
+        return SizedBox(
+          height: 360,
+          child: Column(
+            children: [
+              const SizedBox(height: 12),
+              Container(
+                width: 40,
+                height: 5,
+                decoration: BoxDecoration(
+                    color: Colors.grey[400],
+                    borderRadius: BorderRadius.circular(10)),
+              ),
+              const SizedBox(height: 12),
+              const Text("Pilih Kategori",
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 10),
 
-                  // === SCROLLABLE LIST ===
-                  Expanded(
-                    child: ListView.builder(
-                      itemCount: kategoriList.length,
+              Expanded(
+                child: StreamBuilder(
+                  stream: FirebaseFirestore.instance
+                      .collection("categories")
+                      .orderBy("name")
+                      .snapshots(),
+                  builder: (context, snapshot) {
+                    if (!snapshot.hasData) {
+                      return const Center(child: CircularProgressIndicator());
+                    }
+
+                    final docs = snapshot.data!.docs;
+
+                    return ListView.builder(
+                      itemCount: docs.length,
                       itemBuilder: (context, index) {
-                        final nama = kategoriList[index];
+                        final nama = docs[index]["name"];
 
                         return ListTile(
                           title: Text(nama),
-
-                          // pilih kategori
                           onTap: () {
                             setState(() => kategoriDipilih = nama);
                             Navigator.pop(context);
                           },
 
-                          // long press → delete
-                          onLongPress: () => _confirmDeleteCategory(nama),
+                          onLongPress: () =>
+                              _confirmDeleteCategory(nama),
                         );
                       },
-                    ),
-                  ),
-
-                  // FOOTER – tambah kategori
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      border:
-                          Border(top: BorderSide(color: Colors.grey.shade300)),
-                    ),
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.blue,
-                          padding: const EdgeInsets.symmetric(vertical: 12)),
-                      child: const Text("+ Tambah Kategori",
-                          style: TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold)),
-                      onPressed: () {
-                        Navigator.pop(context);
-                        _tambahKategoriBaru();
-                      },
-                    ),
-                  ),
-                ],
+                    );
+                  },
+                ),
               ),
-            );
-          },
+
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  border: Border(top: BorderSide(color: Colors.grey.shade300)),
+                ),
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.blue,
+                      padding: const EdgeInsets.symmetric(vertical: 12)),
+                  child: const Text("+ Tambah Kategori",
+                      style: TextStyle(
+                          color: Colors.white, fontWeight: FontWeight.bold)),
+                  onPressed: () {
+                    Navigator.pop(context);
+                    _tambahKategoriBaru();
+                  },
+                ),
+              ),
+            ],
+          ),
         );
       },
     );
   }
+
 
   // =====================================================
   // UI DROPDOWN
@@ -362,8 +414,8 @@ class _AddStockPageState extends State<AddStockPage> {
                       backgroundColor: const Color(0xFF5A6ACF),
                       padding: EdgeInsets.symmetric(
                           horizontal: w * 0.25, vertical: 14)),
-                  onPressed: () {},
-                  child: const Text("Ajukan",
+                  onPressed: _saveItem,
+                  child: const Text("Masukkan",
                       style: TextStyle(fontSize: 16, color: Colors.white)),
                 ),
               )
