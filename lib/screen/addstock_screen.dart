@@ -63,7 +63,9 @@ class _AddStockPageState extends State<AddStockPage> {
         ),
       );
 
-      if (context.canPop()) context.pop();
+      // ⬇️ FIX: langsung ke home
+      context.go('/home');
+
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("Gagal menyimpan: $e")),
