@@ -17,6 +17,9 @@ class AuthProvider extends ChangeNotifier {
   bool get isLoading => _isLoading;
   bool get isAuthenticated => _user != null;
 
+  // =========================================================
+  // INITIALIZE AUTH
+  // =========================================================
   AuthProvider() {
     _initializeAuth();
   }
@@ -26,13 +29,13 @@ class AuthProvider extends ChangeNotifier {
       _user = user;
 
       if (user != null) {
-        DocumentSnapshot doc = await FirebaseFirestore.instance
-            .collection('users')
+        final doc = await FirebaseFirestore.instance
+            .collection("users")
             .doc(user.uid)
             .get();
 
         if (doc.exists && doc.data() != null) {
-          _role = doc['role'] ?? "none";
+          _role = doc["role"] ?? "none";
         } else {
           _role = "none";
         }
@@ -45,7 +48,54 @@ class AuthProvider extends ChangeNotifier {
   }
 
   // =========================================================
-  // LOGIN EMAIL
+  // EMAIL VERIFICATION SYSTEM (FINAL VERSION)
+  // =========================================================
+
+  /// Kirim email verifikasi
+  Future<String> sendEmailVerification() async {
+    final user = FirebaseAuth.instance.currentUser;
+
+    if (user == null) return "User tidak ditemukan.";
+
+    if (user.emailVerified) {
+      return "Email kamu sudah terverifikasi.";
+    }
+
+    try {
+      await user.sendEmailVerification();
+      return "Link verifikasi telah dikirim ke email kamu.";
+    } catch (e) {
+      return "Gagal mengirim link verifikasi: $e";
+    }
+  }
+
+  /// Kirim ulang email verifikasi
+  Future<String> resendVerificationEmail() async {
+    final user = FirebaseAuth.instance.currentUser;
+
+    if (user == null) return "User tidak ditemukan.";
+    if (user.emailVerified) return "Email sudah terverifikasi.";
+
+    try {
+      await user.sendEmailVerification();
+      return "Link verifikasi telah dikirim ulang.";
+    } catch (e) {
+      return "Gagal mengirim ulang verifikasi: $e";
+    }
+  }
+
+  /// Refresh user & cek status emailVerified
+  Future<bool> reloadAndCheckVerified() async {
+    final user = FirebaseAuth.instance.currentUser;
+
+    if (user == null) return false;
+
+    await user.reload();
+    return FirebaseAuth.instance.currentUser!.emailVerified;
+  }
+
+  // =========================================================
+  // LOGIN
   // =========================================================
   Future<String> login(String email, String password) async {
     _isLoading = true;
@@ -54,46 +104,36 @@ class AuthProvider extends ChangeNotifier {
     try {
       await _authService.signIn(email: email, password: password);
 
-      final uid = FirebaseAuth.instance.currentUser!.uid;
+      final user = FirebaseAuth.instance.currentUser;
 
-      final doc = await FirebaseFirestore.instance
-          .collection('users')
-          .doc(uid)
-          .get();
-
-      if (!doc.exists) {
-        // AUTO CREATE USER PROFILE
-        await FirebaseFirestore.instance.collection('users').doc(uid).set({
-          'uid': uid,
-          'email': email,
-          'name': user?.displayName ?? "",
-          'verified': false,
-          'role': 'none',
-          'createdAt': FieldValue.serverTimestamp(),
-        });
-
-        // Setelah dibuat, ambil ulang
-        final newDoc = await FirebaseFirestore.instance.collection('users').doc(uid).get();
-        _role = newDoc['role'] ?? "none";
-
+      if (user == null) {
         _isLoading = false;
         notifyListeners();
-        return "success";
+        return "User tidak ditemukan.";
       }
 
-
-      final data = doc.data() as Map<String, dynamic>;
-
-      // CEK VERIFIKASI ADMIN
-      if (data["verified"] != true) {
+      // 🔥 CEK EMAIL VERIFIKASI DULU
+      if (!user.emailVerified) {
         await _authService.signOut();
         _isLoading = false;
         notifyListeners();
-        return "Akun Anda belum diverifikasi admin.";
+        return "Email belum terverifikasi.\nSilahkan verifikasi terlebih dahulu.";
       }
 
-      // ROLE
-      _role = data["role"] ?? "none";
+      // 🔥 CEK VERIFIKASI ADMIN DI FIRESTORE
+      final doc = await FirebaseFirestore.instance
+          .collection("users")
+          .doc(user.uid)
+          .get();
+
+      if (!doc.exists || doc["verified"] != true) {
+        await _authService.signOut();
+        _isLoading = false;
+        notifyListeners();
+        return "Akun kamu belum disetujui admin.";
+      }
+
+      _role = doc["role"] ?? "none";
 
       _isLoading = false;
       notifyListeners();
@@ -103,43 +143,40 @@ class AuthProvider extends ChangeNotifier {
       _isLoading = false;
       notifyListeners();
 
-      if (e.code == 'user-not-found') return "Email tidak ditemukan.";
-      if (e.code == 'wrong-password') return "Password salah.";
-      if (e.code == 'invalid-email') return "Format email salah.";
+      if (e.code == "user-not-found") return "Email tidak ditemukan.";
+      if (e.code == "wrong-password") return "Password salah.";
 
-      return e.message ?? "Terjadi kesalahan autentikasi.";
-    } catch (e) {
-      _isLoading = false;
-      notifyListeners();
-      return "Gagal login: $e";
+      return e.message ?? "Gagal login.";
     }
   }
 
   // =========================================================
-  // REGISTER (UPDATED)
+  // SIGN UP (UPDATED)
   // =========================================================
-  Future<String> signUpWithEmail(
-      String email, String password, String name) async {
+  Future<String> signUpWithEmail(String email, String password, String name) async {
     _isLoading = true;
     notifyListeners();
 
     try {
-      UserCredential credential =
-      await _authService.signUp(email: email, password: password);
+      UserCredential credential = await _authService.signUp(
+        email: email,
+        password: password,
+      );
 
       String uid = credential.user!.uid;
 
-      // Firestore default user: BELUM VERIFIKASI + ROLE NONE
-      await FirebaseFirestore.instance.collection('users').doc(uid).set({
-        'uid': uid,
-        'email': email,
-        'name': name,
-        'verified': false,          // <-- ini yang dicek admin
-        'role': 'none',             // <-- admin akan ubah ke: admin/staff/whmanager
-        'createdAt': FieldValue.serverTimestamp(),
+      // Simpan user ke Firestore
+      await FirebaseFirestore.instance.collection("users").doc(uid).set({
+        "uid": uid,
+        "email": email,
+        "name": name,
+        "verified": false, // untuk verifikasi admin
+        "role": "none",
+        "createdAt": FieldValue.serverTimestamp(),
       });
 
-      await _authService.signOut();
+      // 🔥 Kirim VERIFIKASI EMAIL
+      await credential.user!.sendEmailVerification();
 
       _isLoading = false;
       notifyListeners();
@@ -149,14 +186,13 @@ class AuthProvider extends ChangeNotifier {
       _isLoading = false;
       notifyListeners();
 
-      if (e.code == 'weak-password') return "Password terlalu lemah.";
-      if (e.code == 'email-already-in-use') return "Email sudah terdaftar.";
-
+      if (e.code == "weak-password") return "Password terlalu lemah.";
+      if (e.code == "email-already-in-use") return "Email sudah terdaftar.";
       return e.message ?? "Gagal mendaftar.";
     } catch (e) {
       _isLoading = false;
       notifyListeners();
-      return e.toString();
+      return "Error: $e";
     }
   }
 

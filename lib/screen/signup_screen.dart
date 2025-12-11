@@ -222,36 +222,82 @@ class _SignUpScreenState extends State<SignUpScreen> {
   }
 
   // ============================================================
-  //                    LOGIKA SIGN UP
-  // ============================================================
-  Future<void> _handleSignUp() async {
-    final name = nameCtrl.text.trim();
-    final email = emailCtrl.text.trim();
-    final pass = passCtrl.text.trim();
-    final conf = confirmCtrl.text.trim();
+//                    LOGIKA SIGN UP
+// ============================================================
+Future<void> _handleSignUp() async {
+  final name = nameCtrl.text.trim();
+  final email = emailCtrl.text.trim();
+  final pass = passCtrl.text.trim();
+  final conf = confirmCtrl.text.trim();
 
-    if (name.isEmpty) return showError("Nama lengkap wajib diisi");
-    if (email.isEmpty || pass.isEmpty || conf.isEmpty) {
-      return showError("Semua field wajib diisi");
-    }
-    if (pass != conf) return showError("Konfirmasi password tidak cocok");
-    if (pass.length < 6) return showError("Password minimal 6 karakter");
-
-    setState(() => loading = true);
-
-    final auth = context.read<AuthProvider>();
-    final result = await auth.signUpWithEmail(email, pass, name);
-
-    if (!mounted) return;
-    setState(() => loading = false);
-
-    if (result == "success") {
-      // 🔥 Langsung pindah ke halaman success
-      context.go(AppRoutes.signSuccess);
-    } else {
-      showError(result);
-    }
+  if (name.isEmpty) return showError("Nama lengkap wajib diisi");
+  if (email.isEmpty || pass.isEmpty || conf.isEmpty) {
+    return showError("Semua field wajib diisi");
   }
+
+  bool isValidEmail(String email) {
+    final regex = RegExp(r'^[^@]+@[^@]+\.[^@]+$');
+    return regex.hasMatch(email);
+  }
+
+  if (!isValidEmail(email)) {
+    return showError("Email tidak valid. Masukkan email yang benar.");
+  }
+
+  if (pass != conf) return showError("Konfirmasi password tidak cocok");
+  if (pass.length < 6) return showError("Password minimal 6 karakter");
+
+  setState(() => loading = true);
+
+  final auth = context.read<AuthProvider>();
+  final result = await auth.signUpWithEmail(email, pass, name);
+
+  if (!mounted) return;
+  setState(() => loading = false);
+
+  if (result != "success") {
+    return showError(result);
+  }
+
+  // ===============================
+  // KIRIM EMAIL VERIFIKASI
+  // ===============================
+  await auth.sendEmailVerification();
+
+  // ===============================
+  // TAMPILKAN POPUP KONFIRMASI
+  // ===============================
+  showDialog(
+    context: context,
+    barrierDismissible: false,
+    builder: (_) {
+      return AlertDialog(
+        title: const Text("Verifikasi Email"),
+        content: const Text(
+          "Kami telah mengirim link verifikasi ke email kamu.\n\n"
+          "Silahkan buka email dan klik link verifikasi.\n\n"
+          "Tekan tombol di bawah jika kamu sudah verifikasi.",
+        ),
+        actions: [
+          TextButton(
+            onPressed: () async {
+              // Refresh user data dari Firebase
+              final verified = await auth.reloadAndCheckVerified();
+
+              if (verified) {
+                if (!mounted) return;
+                context.go(AppRoutes.signSuccess); // ⬅ masuk hanya jika verified
+              } else {
+                showError("Email belum terverifikasi.");
+              }
+            },
+            child: const Text("Saya sudah verifikasi"),
+          ),
+        ],
+      );
+    },
+  );
+}
 
   // ============================================================
   //                      ERROR HANDLER
