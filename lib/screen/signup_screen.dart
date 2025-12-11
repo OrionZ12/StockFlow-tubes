@@ -63,6 +63,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
                     const SizedBox(height: 30),
 
+                    // ================= NAMA =================
                     TextField(
                       controller: nameCtrl,
                       style: TextStyle(fontSize: inputFont),
@@ -80,6 +81,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
                     SizedBox(height: fieldSpacing),
 
+                    // ================= EMAIL =================
                     TextField(
                       controller: emailCtrl,
                       style: TextStyle(fontSize: inputFont),
@@ -97,6 +99,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
                     SizedBox(height: fieldSpacing),
 
+                    // ================= PASSWORD =================
                     TextField(
                       controller: passCtrl,
                       obscureText: showPass,
@@ -113,13 +116,15 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           icon: Icon(
                             showPass ? Icons.visibility_off : Icons.visibility,
                           ),
-                          onPressed: () => setState(() => showPass = !showPass),
+                          onPressed: () =>
+                              setState(() => showPass = !showPass),
                         ),
                       ),
                     ),
 
                     SizedBox(height: fieldSpacing),
 
+                    // ================= CONFIRM PASSWORD =================
                     TextField(
                       controller: confirmCtrl,
                       obscureText: showConfirm,
@@ -146,6 +151,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
                     const SizedBox(height: 24),
 
+                    // ================= BUTTON DAFTAR =================
                     SizedBox(
                       width: double.infinity,
                       child: ElevatedButton(
@@ -159,26 +165,27 @@ class _SignUpScreenState extends State<SignUpScreen> {
                         ),
                         child: loading
                             ? const SizedBox(
-                          height: 20,
-                          width: 20,
-                          child: CircularProgressIndicator(
-                            color: Colors.white,
-                            strokeWidth: 2,
-                          ),
-                        )
+                                height: 20,
+                                width: 20,
+                                child: CircularProgressIndicator(
+                                  color: Colors.white,
+                                  strokeWidth: 2,
+                                ),
+                              )
                             : Text(
-                          "Daftar",
-                          style: TextStyle(
-                            fontSize: inputFont.clamp(14, 20),
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
+                                "Daftar",
+                                style: TextStyle(
+                                  fontSize: inputFont.clamp(14, 20),
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
                       ),
                     ),
 
                     const SizedBox(height: 18),
 
+                    // ================= TEXT LOGIN =================
                     Center(
                       child: RichText(
                         text: TextSpan(
@@ -214,28 +221,21 @@ class _SignUpScreenState extends State<SignUpScreen> {
     );
   }
 
+  // ============================================================
+  //                    LOGIKA SIGN UP
+  // ============================================================
   Future<void> _handleSignUp() async {
     final name = nameCtrl.text.trim();
     final email = emailCtrl.text.trim();
     final pass = passCtrl.text.trim();
     final conf = confirmCtrl.text.trim();
 
-    if (name.isEmpty) {
-      showError("Nama lengkap wajib diisi");
-      return;
-    }
+    if (name.isEmpty) return showError("Nama lengkap wajib diisi");
     if (email.isEmpty || pass.isEmpty || conf.isEmpty) {
-      showError("Semua field wajib diisi");
-      return;
+      return showError("Semua field wajib diisi");
     }
-    if (pass != conf) {
-      showError("Konfirmasi password tidak cocok");
-      return;
-    }
-    if (pass.length < 6) {
-      showError("Password minimal 6 karakter");
-      return;
-    }
+    if (pass != conf) return showError("Konfirmasi password tidak cocok");
+    if (pass.length < 6) return showError("Password minimal 6 karakter");
 
     setState(() => loading = true);
 
@@ -246,30 +246,16 @@ class _SignUpScreenState extends State<SignUpScreen> {
     setState(() => loading = false);
 
     if (result == "success") {
-      showDialog(
-        context: context,
-        builder: (_) => AlertDialog(
-          title: const Text("Pendaftaran Berhasil"),
-          content: const Text(
-            "Akun kamu berhasil dibuat dan sedang menunggu verifikasi admin.\n\n"
-                "Silahkan login setelah akun disetujui.",
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.pop(context);
-                context.go(AppRoutes.login);
-              },
-              child: const Text("OK"),
-            ),
-          ],
-        ),
-      );
+      // 🔥 Langsung pindah ke halaman success
+      context.go(AppRoutes.signSuccess);
     } else {
       showError(result);
     }
   }
 
+  // ============================================================
+  //                      ERROR HANDLER
+  // ============================================================
   void showError(String msg) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(

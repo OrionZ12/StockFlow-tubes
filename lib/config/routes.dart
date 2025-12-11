@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+// ==== Import Screens ====
 import 'package:tubes/screen/history_screen.dart';
 import 'package:tubes/screen/notification_screen.dart';
 import 'package:tubes/screen/profile_screen.dart';
@@ -10,13 +11,19 @@ import 'package:tubes/screen/logout_confirm_screen.dart';
 import 'package:tubes/screen/notification_settings_page.dart';
 import 'package:tubes/screen/change_password_screen.dart';
 import 'package:tubes/screen/change_password_success_screen.dart';
+import 'package:tubes/screen/addstock_screen.dart';
+import 'package:tubes/screen/signsuc_screen.dart'; 
+  // ⬅️ WAJIB ADA
+
 import '../screen/splash_screen.dart';
 import '../screen/firstime_screen.dart';
 import '../screen/login_screen.dart';
-import '../screen/signsuc_screen.dart';
 import '../screen/home_screen.dart';
 import '../widget/app_scaffold.dart';
 
+// =========================
+// ROUTES
+// =========================
 class AppRoutes {
   static const String splash = '/splash';
   static const String firstTime = '/firstime';
@@ -24,23 +31,35 @@ class AppRoutes {
   static const String signSuccess = '/signsuccess';
   static const String signUp = '/signup';
 
+  // Bottom Nav Pages
   static const String home = '/home';
   static const String history = '/history';
   static const String profile = '/profile';
   static const String account = '/account';
-  static const String notification = '/notification';
 
-  static const String logoutConfirm = '/logout-confirm';
+  // Other pages
+  static const String notification = '/notification';
   static const String notificationSettings = '/notification-settings';
   static const String changePassword = '/change-password';
   static const String changePasswordSuccess = '/change-password-success';
+  static const String logoutConfirm = '/logout-confirm';
+
+  // ➕ Halaman Tambahan
+  static const String addStock = '/addstock';
 }
 
+// =========================
+// ROUTER CREATOR
+// =========================
 GoRouter createRouter() {
   return GoRouter(
     initialLocation: AppRoutes.splash,
+
     routes: [
-      // 🟦 Halaman Awal
+
+      // =============================
+      // STARTER SCREENS
+      // =============================
       GoRoute(
         path: AppRoutes.splash,
         builder: (_, __) => const SplashScreen(),
@@ -59,10 +78,12 @@ GoRouter createRouter() {
       ),
       GoRoute(
         path: AppRoutes.signSuccess,
-        builder: (_, __) => const SuccessScreen(),
+        builder: (_, __) => const SignsucScreen(),
       ),
 
-      // 🟩 Halaman utama dengan bottom nav bar
+      // =============================
+      // MAIN PAGES (WITH BOTTOM NAV)
+      // =============================
       ShellRoute(
         builder: (context, state, child) => AppScaffold(child: child),
         routes: [
@@ -89,14 +110,12 @@ GoRouter createRouter() {
         ],
       ),
 
-      // 🟨 Halaman lain tanpa bottom nav
+      // =============================
+      // PAGES OUTSIDE NAVBAR
+      // =============================
       GoRoute(
         path: AppRoutes.notification,
         builder: (_, __) => const NotificationStaffPage(),
-      ),
-      GoRoute(
-        path: AppRoutes.logoutConfirm,
-        builder: (_, __) => const LogoutConfirmScreen(),
       ),
       GoRoute(
         path: AppRoutes.notificationSettings,
@@ -106,13 +125,29 @@ GoRouter createRouter() {
         path: AppRoutes.changePasswordSuccess,
         builder: (_, __) => const ChangePasswordSuccessScreen(),
       ),
+      GoRoute(
+        path: AppRoutes.logoutConfirm,
+        builder: (_, __) => const LogoutConfirmScreen(),
+      ),
+
+      // =============================
+      // ADD STOCK PAGE (NEW)
+      // =============================
+      GoRoute(
+        path: AppRoutes.addStock,
+        builder: (_, __) => const AddStockPage(),  // ⬅️ CLASS SUDAH BENAR
+      ),
     ],
+
+    // =============================
+    // ERROR PAGE
+    // =============================
     errorBuilder: (context, state) => Scaffold(
       body: Center(
         child: Text(
-          '404 - Page Not Found\n${state.uri.path}',
+          "404 - Page Not Found\n${state.uri.path}",
+          style: const TextStyle(color: Colors.redAccent, fontSize: 16),
           textAlign: TextAlign.center,
-          style: const TextStyle(color: Colors.redAccent),
         ),
       ),
     ),

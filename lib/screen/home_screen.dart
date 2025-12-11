@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../services/firestore_service.dart';
+import 'package:go_router/go_router.dart';
+import '../config/routes.dart';
 
 import '../provider/auth_provider.dart';
 import '../theme/app_colors.dart';
@@ -186,7 +187,7 @@ class _HomeScreenState extends State<HomeScreen> {
       child: IconButton(
         icon: const Icon(Icons.add, color: AppColors.blueMain),
         iconSize: w * 0.07,
-        onPressed: () {},
+        onPressed: () => context.go(AppRoutes.addStock),
       ),
     );
   }
