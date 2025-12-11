@@ -1,29 +1,276 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:go_router/go_router.dart';
+import '../theme/app_colors.dart';
 
 class AddStockPage extends StatefulWidget {
   const AddStockPage({super.key});
 
   @override
-  State<AddStockPage> createState() => _AddStokPageState();
+  State<AddStockPage> createState() => _AddStockPageState();
 }
 
-class _AddStokPageState extends State<AddStockPage> {
+class _AddStockPageState extends State<AddStockPage> {
   final TextEditingController nameCtrl = TextEditingController();
   final TextEditingController dateCtrl = TextEditingController();
   final TextEditingController supplierCtrl = TextEditingController();
   final TextEditingController descCtrl = TextEditingController();
 
   int jumlah = 1;
-  String kategori = "Mouse";
+  List<String> kategoriList = [];
+  String? kategoriDipilih;
 
   @override
   void initState() {
     super.initState();
     dateCtrl.text = DateFormat("dd-MM-yyyy").format(DateTime.now());
+    _loadCategories();
   }
 
+  // =====================================================
+  // LOAD KATEGORI
+  // =====================================================
+  Future<void> _loadCategories() async {
+    final uid = FirebaseAuth.instance.currentUser!.uid;
+    final doc =
+        await FirebaseFirestore.instance.collection("users").doc(uid).get();
+
+    if (doc.exists && doc.data()!.containsKey("categories")) {
+      kategoriList = List<String>.from(doc["categories"]);
+    } else {
+      kategoriList = [];
+    }
+
+    setState(() {});
+  }
+
+  // =====================================================
+  // TAMBAH KATEGORI
+  // =====================================================
+  Future<void> _tambahKategoriBaru() async {
+    final TextEditingController catCtrl = TextEditingController();
+
+    await showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        backgroundColor: AppColors.pageBackground,
+        title: const Text("Tambah Kategori Baru"),
+        content: TextField(
+          controller: catCtrl,
+          decoration: const InputDecoration(hintText: "Nama kategori..."),
+        ),
+        actions: [
+          TextButton(
+            child: const Text("Batal"),
+            style: ElevatedButton.styleFrom(
+            foregroundColor: AppColors.blueTitle, 
+            ),
+            onPressed: () => Navigator.pop(context),
+          ),
+          ElevatedButton(
+            child: const Text("Simpan"),
+            style: ElevatedButton.styleFrom(
+              foregroundColor: AppColors.blueTitle,
+              backgroundColor: const Color.fromARGB(255, 108, 227, 112),
+            ),
+            onPressed: () async {
+              final newCat = catCtrl.text.trim();
+              if (newCat.isEmpty) return;
+
+              kategoriList.add(newCat);
+
+              final uid = FirebaseAuth.instance.currentUser!.uid;
+              await FirebaseFirestore.instance
+                  .collection("users")
+                  .doc(uid)
+                  .update({"categories": kategoriList});
+
+              kategoriDipilih = newCat;
+
+              Navigator.pop(context); // tutup popup
+              setState(() {});
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  // =====================================================
+  // HAPUS KATEGORI
+  // =====================================================
+  Future<void> _hapusKategori(String category) async {
+    final uid = FirebaseAuth.instance.currentUser!.uid;
+
+    kategoriList.remove(category);
+
+    await FirebaseFirestore.instance
+        .collection("users")
+        .doc(uid)
+        .update({"categories": kategoriList});
+
+    if (kategoriDipilih == category) {
+      kategoriDipilih = null;
+    }
+
+    setState(() {});
+  }
+
+  // =====================================================
+  // POPUP KONFIRMASI DELETE
+  // =====================================================
+  Future<void> _confirmDeleteCategory(String category) async {
+    await showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        backgroundColor: AppColors.pageBackground,
+        title: const Text("Hapus Kategori"),
+        content: Text("Apakah Anda yakin ingin menghapus kategori \"$category\"?"),
+        actions: [
+          TextButton(
+            child: const Text("Batal"),
+            onPressed: () => Navigator.pop(context),
+            style: ElevatedButton.styleFrom(
+            foregroundColor: AppColors.blueMain, 
+            ),
+          ),
+          ElevatedButton(
+            child: const Text("Hapus"),
+            style: ElevatedButton.styleFrom(
+              foregroundColor: Colors.white,
+              backgroundColor: Colors.red
+            ),
+            onPressed: () async {
+              Navigator.pop(context); // tutup dialog delete
+              Navigator.pop(context); // tutup bottom sheet → FIX ERROR Range
+              await _hapusKategori(category);
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  // =====================================================
+  // BOTTOM SHEET PILIH KATEGORI (TANPA ERROR)
+  // =====================================================
+  void _showKategoriSelector() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: false,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (_) {
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            return SizedBox(
+              height: 360,
+              child: Column(
+                children: [
+                  const SizedBox(height: 12),
+                  Container(
+                    width: 40,
+                    height: 5,
+                    decoration: BoxDecoration(
+                        color: Colors.grey[400],
+                        borderRadius: BorderRadius.circular(10)),
+                  ),
+                  const SizedBox(height: 12),
+                  const Text("Pilih Kategori",
+                      style:
+                          TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 10),
+
+                  // === SCROLLABLE LIST ===
+                  Expanded(
+                    child: ListView.builder(
+                      itemCount: kategoriList.length,
+                      itemBuilder: (context, index) {
+                        final nama = kategoriList[index];
+
+                        return ListTile(
+                          title: Text(nama),
+
+                          // pilih kategori
+                          onTap: () {
+                            setState(() => kategoriDipilih = nama);
+                            Navigator.pop(context);
+                          },
+
+                          // long press → delete
+                          onLongPress: () => _confirmDeleteCategory(nama),
+                        );
+                      },
+                    ),
+                  ),
+
+                  // FOOTER – tambah kategori
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      border:
+                          Border(top: BorderSide(color: Colors.grey.shade300)),
+                    ),
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.blue,
+                          padding: const EdgeInsets.symmetric(vertical: 12)),
+                      child: const Text("+ Tambah Kategori",
+                          style: TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold)),
+                      onPressed: () {
+                        Navigator.pop(context);
+                        _tambahKategoriBaru();
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  // =====================================================
+  // UI DROPDOWN
+  // =====================================================
+  Widget _dropdownKategori() {
+    return GestureDetector(
+      onTap: _showKategoriSelector,
+      child: Container(
+        margin: const EdgeInsets.only(top: 6),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+        decoration: BoxDecoration(
+            color: Colors.white, borderRadius: BorderRadius.circular(12)),
+        child: Row(
+          children: [
+            Expanded(
+              child: Text(
+                kategoriDipilih ?? "Pilih kategori...",
+                style: TextStyle(
+                    color: kategoriDipilih == null
+                        ? Colors.grey
+                        : Colors.black),
+              ),
+            ),
+            const Icon(Icons.arrow_drop_down)
+          ],
+        ),
+      ),
+    );
+  }
+
+  // =====================================================
+  // BUILD UI
+  // =====================================================
   @override
   Widget build(BuildContext context) {
     final w = MediaQuery.of(context).size.width;
@@ -36,7 +283,6 @@ class _AddStokPageState extends State<AddStockPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // 🔙 Back Button + Title
               Row(
                 children: [
                   GestureDetector(
@@ -44,21 +290,20 @@ class _AddStokPageState extends State<AddStockPage> {
                     child: Container(
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
-                        color: const Color(0xFF5A6ACF),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
+                          color: const Color(0xFF5A6ACF),
+                          borderRadius: BorderRadius.circular(12)),
                       child: const Icon(Icons.arrow_back, color: Colors.white),
                     ),
                   ),
                   const Spacer(),
                   const Text("Stock",
-                      style: TextStyle(
-                          fontSize: 18, fontWeight: FontWeight.bold)),
+                      style:
+                          TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                   const Text("Flow",
                       style: TextStyle(
                           fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xFF5A6ACF))),
+                          color: Color(0xFF5A6ACF),
+                          fontWeight: FontWeight.bold)),
                 ],
               ),
 
@@ -113,21 +358,14 @@ class _AddStokPageState extends State<AddStockPage> {
               Center(
                 child: ElevatedButton(
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF5A6ACF),
-                    padding: EdgeInsets.symmetric(
-                      horizontal: w * 0.2,
-                      vertical: 14,
-                    ),
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10)),
-                  ),
+                      backgroundColor: const Color(0xFF5A6ACF),
+                      padding: EdgeInsets.symmetric(
+                          horizontal: w * 0.25, vertical: 14)),
                   onPressed: () {},
-                  child: const Text(
-                    "Ajukan",
-                    style: TextStyle(fontSize: 15),
-                  ),
+                  child: const Text("Ajukan",
+                      style: TextStyle(fontSize: 16, color: Colors.white)),
                 ),
-              ),
+              )
             ],
           ),
         ),
@@ -135,34 +373,26 @@ class _AddStokPageState extends State<AddStockPage> {
     );
   }
 
-  // ---------------------------------------------------------------
-  //  WIDGET KOMPONEN
-  // ---------------------------------------------------------------
-
-  Widget _title(String text) {
-    return Text(text,
-        style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600));
-  }
+  // =====================================================
+  // WIDGETS
+  // =====================================================
+  Widget _title(String text) => Text(text,
+      style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600));
 
   Widget _inputField(TextEditingController c,
-      {String? placeholder, int maxLines = 1}) {
-    return Container(
-      margin: const EdgeInsets.only(top: 6),
-      padding: const EdgeInsets.symmetric(horizontal: 12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: TextField(
-        controller: c,
-        maxLines: maxLines,
-        decoration: InputDecoration(
-          hintText: placeholder,
-          border: InputBorder.none,
+          {String? placeholder, int maxLines = 1}) =>
+      Container(
+        margin: const EdgeInsets.only(top: 6),
+        padding: const EdgeInsets.symmetric(horizontal: 12),
+        decoration: BoxDecoration(
+            color: Colors.white, borderRadius: BorderRadius.circular(12)),
+        child: TextField(
+          controller: c,
+          maxLines: maxLines,
+          decoration:
+              InputDecoration(hintText: placeholder, border: InputBorder.none),
         ),
-      ),
-    );
-  }
+      );
 
   Widget _dateField() {
     return GestureDetector(
@@ -173,7 +403,6 @@ class _AddStokPageState extends State<AddStockPage> {
           firstDate: DateTime(2023),
           lastDate: DateTime(2030),
         );
-
         if (picked != null) {
           dateCtrl.text = DateFormat("dd-MM-yyyy").format(picked);
           setState(() {});
@@ -183,13 +412,11 @@ class _AddStokPageState extends State<AddStockPage> {
         margin: const EdgeInsets.only(top: 6),
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
         decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(12),
-        ),
+            color: Colors.white, borderRadius: BorderRadius.circular(12)),
         child: Row(
           children: [
             Expanded(child: Text(dateCtrl.text)),
-            const Icon(Icons.calendar_today, size: 18, color: Colors.grey)
+            const Icon(Icons.calendar_today, size: 18, color: Colors.grey),
           ],
         ),
       ),
@@ -201,9 +428,7 @@ class _AddStokPageState extends State<AddStockPage> {
       margin: const EdgeInsets.only(top: 6),
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-      ),
+          color: Colors.white, borderRadius: BorderRadius.circular(12)),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
@@ -217,26 +442,6 @@ class _AddStokPageState extends State<AddStockPage> {
               onPressed: () => setState(() => jumlah++),
               icon: const Icon(Icons.add)),
         ],
-      ),
-    );
-  }
-
-  Widget _dropdownKategori() {
-    return Container(
-      margin: const EdgeInsets.only(top: 6),
-      padding: const EdgeInsets.symmetric(horizontal: 12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: DropdownButton<String>(
-        value: kategori,
-        isExpanded: true,
-        underline: const SizedBox(),
-        items: ["Mouse", "Keyboard", "Monitor", "Storage"]
-            .map((e) => DropdownMenuItem(value: e, child: Text(e)))
-            .toList(),
-        onChanged: (v) => setState(() => kategori = v!),
       ),
     );
   }
