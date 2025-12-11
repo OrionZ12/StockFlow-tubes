@@ -43,6 +43,7 @@ class _AddStockPageState extends State<AddStockPage> {
       kategoriList = [];
     }
 
+    kategoriList.sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
     setState(() {});
   }
 
@@ -65,7 +66,7 @@ class _AddStockPageState extends State<AddStockPage> {
           TextButton(
             child: const Text("Batal"),
             style: ElevatedButton.styleFrom(
-            foregroundColor: AppColors.blueTitle, 
+              foregroundColor: AppColors.blueTitle,
             ),
             onPressed: () => Navigator.pop(context),
           ),
@@ -79,7 +80,20 @@ class _AddStockPageState extends State<AddStockPage> {
               final newCat = catCtrl.text.trim();
               if (newCat.isEmpty) return;
 
+            // CEK DUPLIKAT
+              if (kategoriList.contains(newCat)) {
+                Navigator.pop(context);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text("Kategori sudah ada!"),
+                    backgroundColor: Colors.red,
+                  ),
+                );
+                return;
+              }
+
               kategoriList.add(newCat);
+              kategoriList.sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
 
               final uid = FirebaseAuth.instance.currentUser!.uid;
               await FirebaseFirestore.instance
@@ -105,6 +119,7 @@ class _AddStockPageState extends State<AddStockPage> {
     final uid = FirebaseAuth.instance.currentUser!.uid;
 
     kategoriList.remove(category);
+    kategoriList.sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
 
     await FirebaseFirestore.instance
         .collection("users")
@@ -127,21 +142,20 @@ class _AddStockPageState extends State<AddStockPage> {
       builder: (_) => AlertDialog(
         backgroundColor: AppColors.pageBackground,
         title: const Text("Hapus Kategori"),
-        content: Text("Apakah Anda yakin ingin menghapus kategori \"$category\"?"),
+        content:
+            Text("Apakah Anda yakin ingin menghapus kategori \"$category\"?"),
         actions: [
           TextButton(
             child: const Text("Batal"),
             onPressed: () => Navigator.pop(context),
             style: ElevatedButton.styleFrom(
-            foregroundColor: AppColors.blueMain, 
+              foregroundColor: AppColors.blueMain,
             ),
           ),
           ElevatedButton(
             child: const Text("Hapus"),
             style: ElevatedButton.styleFrom(
-              foregroundColor: Colors.white,
-              backgroundColor: Colors.red
-            ),
+                foregroundColor: Colors.white, backgroundColor: Colors.red),
             onPressed: () async {
               Navigator.pop(context); // tutup dialog delete
               Navigator.pop(context); // tutup bottom sheet → FIX ERROR Range
@@ -256,9 +270,8 @@ class _AddStockPageState extends State<AddStockPage> {
               child: Text(
                 kategoriDipilih ?? "Pilih kategori...",
                 style: TextStyle(
-                    color: kategoriDipilih == null
-                        ? Colors.grey
-                        : Colors.black),
+                    color:
+                        kategoriDipilih == null ? Colors.grey : Colors.black),
               ),
             ),
             const Icon(Icons.arrow_drop_down)
@@ -306,14 +319,10 @@ class _AddStockPageState extends State<AddStockPage> {
                           fontWeight: FontWeight.bold)),
                 ],
               ),
-
               const SizedBox(height: 20),
-
               _title("Nama Produk"),
               _inputField(nameCtrl, placeholder: "Nama Produk"),
-
               const SizedBox(height: 15),
-
               Row(
                 children: [
                   Expanded(
@@ -337,24 +346,16 @@ class _AddStockPageState extends State<AddStockPage> {
                   ),
                 ],
               ),
-
               const SizedBox(height: 15),
-
               _title("Kategori"),
               _dropdownKategori(),
-
               const SizedBox(height: 15),
-
               _title("Pemasok"),
               _inputField(supplierCtrl),
-
               const SizedBox(height: 15),
-
               _title("Deskripsi"),
               _inputField(descCtrl, maxLines: 3),
-
               const SizedBox(height: 25),
-
               Center(
                 child: ElevatedButton(
                   style: ElevatedButton.styleFrom(
