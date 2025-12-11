@@ -13,17 +13,44 @@ class ProductList extends StatelessWidget {
   });
 
   Future<void> _updateStockInFirestore(
-      String itemId, String name, String desc, int newStock) async {
-    final user = FirebaseAuth.instance.currentUser;
+      String itemId, String name, String desc, int newStock, int oldStock) async {
 
+    final user = FirebaseAuth.instance.currentUser;
+    final uid = user!.uid;
+
+    // ambil username
+    final userDoc = await FirebaseFirestore.instance
+        .collection("users")
+        .doc(uid)
+        .get();
+    final username = userDoc.data()?["username"] ?? "unknown";
+
+    // tentukan perubahan stok
+    int change = newStock - oldStock;
+    String type = change > 0 ? "in" : "out";
+
+    // update stok pada item
     await FirebaseFirestore.instance.collection("items").doc(itemId).set({
-      "name": name,
-      "desc": desc,
       "stok": newStock,
       "last_updated": FieldValue.serverTimestamp(),
-      "last_updated_by": user?.email ?? "unknown",
+      "last_updated_by": uid,
     }, SetOptions(merge: true));
+
+    // CATAT RIWAYAT
+    if (change != 0) {
+      await FirebaseFirestore.instance.collection("history").add({
+        "type": type,
+        "item_name": name,
+        "item_id": itemId,
+        "qty_change": change,
+        "final_stock": newStock,
+        "timestamp": FieldValue.serverTimestamp(),
+        "user_id": uid,
+        "username": username,
+      });
+    }
   }
+
 
   void _showStockPopup(BuildContext context, String name, String desc,
       int stock, String itemId) {
@@ -126,14 +153,18 @@ class ProductList extends StatelessWidget {
                         Navigator.pop(context);
 
                         await _updateStockInFirestore(
-                            itemId, name, desc, newStock);
+                          itemId,
+                          name,
+                          desc,
+                          newStock,
+                          stock, // ← oldStock
+                        );
 
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text("Stok berhasil diperbarui!"),
-                          ),
+                          const SnackBar(content: Text("Stok berhasil diperbarui!")),
                         );
                       },
+
                       child: const Text("Simpan",
                           style:
                           TextStyle(color: Colors.white, fontSize: 18)),

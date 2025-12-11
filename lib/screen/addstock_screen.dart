@@ -45,6 +45,17 @@ class _AddStockPageState extends State<AddStockPage> {
         return;
       }
 
+      final uid = FirebaseAuth.instance.currentUser!.uid;
+      final user = FirebaseAuth.instance.currentUser!;
+
+      // Ambil username dari Firestore (lebih rapih daripada email)
+      final userDoc = await FirebaseFirestore.instance
+          .collection("users")
+          .doc(uid)
+          .get();
+
+      final username = userDoc.data()?["username"] ?? "unknown";
+
       await FirebaseFirestore.instance.collection("items").add({
         "name": name,
         "desc": desc,
@@ -52,8 +63,12 @@ class _AddStockPageState extends State<AddStockPage> {
         "category": kategoriDipilih,
         "supplier": supplier,
         "date": date,
+
+        // Field metadata
+        "created_by": uid,
+        "created_by_name": username,
         "last_updated": FieldValue.serverTimestamp(),
-        "last_updated_by": FirebaseAuth.instance.currentUser?.email ?? "unknown"
+        "last_updated_by": uid,
       });
 
       ScaffoldMessenger.of(context).showSnackBar(
@@ -63,15 +78,14 @@ class _AddStockPageState extends State<AddStockPage> {
         ),
       );
 
-      // ⬇️ FIX: langsung ke home
       context.go('/home');
-
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("Gagal menyimpan: $e")),
       );
     }
   }
+
 
 
   // =====================================================
