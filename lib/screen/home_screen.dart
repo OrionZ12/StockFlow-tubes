@@ -209,7 +209,11 @@ class _HomeScreenState extends State<HomeScreen> {
                               ];
                             }).toList();
 
-                            return ProductList(products: products);
+                            return ProductList(
+                              products: products,
+                              userRole: role,   // ← KIRIM ROLE YANG BENAR
+                            );
+
                           },
                         ),
                       ),

@@ -5,11 +5,14 @@ import '../theme/app_colors.dart';
 
 class ProductList extends StatelessWidget {
   final List products;
+  final String userRole;
 
   const ProductList({
     super.key,
     required this.products,
+    required this.userRole,
   });
+
 
   // =====================================================
   // UPDATE STOCK + HISTORY
@@ -71,20 +74,20 @@ class ProductList extends StatelessWidget {
       BuildContext context, String itemId, String name) {
     showDialog(
       context: context,
-      builder: (_) => AlertDialog(
+      builder: (alertContext) => AlertDialog(
         title: const Text("Hapus Barang"),
         content: Text("Apakah Anda yakin ingin menghapus \"$name\"?"),
         actions: [
           TextButton(
             child: const Text("Batal"),
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => Navigator.pop(alertContext),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
             child: const Text("Hapus", style: TextStyle(color: Colors.white)),
             onPressed: () async {
-              Navigator.pop(context);
-              await _deleteItem(context, itemId, name);
+              Navigator.pop(alertContext);        // Tutup dialog
+              await _deleteItem(context, itemId, name); // Lanjutkan delete
             },
           ),
         ],
@@ -92,20 +95,20 @@ class ProductList extends StatelessWidget {
     );
   }
 
+
   // =====================================================
   // POPUP UPDATE STOK
   // =====================================================
-  void _showStockPopup(BuildContext context, String name, String desc,
-      int stock, String itemId) {
+  void _showStockPopup(
+      BuildContext context,
+      String name,
+      String desc,
+      int stock,
+      String itemId,
+      String userRole,
+      ) {
     int newStock = stock;
     final controller = TextEditingController(text: stock.toString());
-
-    void updateStock(int value, StateSetter setState) {
-      setState(() {
-        newStock = (newStock + value).clamp(0, 999999);
-        controller.text = newStock.toString();
-      });
-    }
 
     showDialog(
       context: context,
@@ -113,8 +116,7 @@ class ProductList extends StatelessWidget {
       builder: (_) => StatefulBuilder(
         builder: (context, setState) => Dialog(
           insetPadding: const EdgeInsets.all(20),
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
           child: Padding(
             padding: const EdgeInsets.all(24),
             child: Column(
@@ -127,6 +129,8 @@ class ProductList extends StatelessWidget {
                 Text("Stok terakhir: $stock",
                     style: const TextStyle(fontSize: 16)),
                 const SizedBox(height: 20),
+
+                // TEXTFIELD INPUT STOK
                 SizedBox(
                   width: 130,
                   child: TextField(
@@ -144,57 +148,102 @@ class ProductList extends StatelessWidget {
                     ),
                   ),
                 ),
+
                 const SizedBox(height: 20),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    IconButton(
-                      onPressed: () => setState(() {
-                        newStock = (newStock - 10).clamp(0, 999999);
-                        controller.text = newStock.toString();
-                      }),
-                      icon: const Icon(Icons.keyboard_double_arrow_down),
-                    ),
-                    IconButton(
-                      onPressed: () => setState(() {
-                        newStock = (newStock - 1).clamp(0, 999999);
-                        controller.text = newStock.toString();
-                      }),
-                      icon: const Icon(Icons.remove_circle_outline),
-                    ),
-                    IconButton(
-                      onPressed: () => setState(() {
-                        newStock = (newStock + 1).clamp(0, 999999);
-                        controller.text = newStock.toString();
-                      }),
-                      icon: const Icon(Icons.add_circle_outline),
-                    ),
-                    IconButton(
-                      onPressed: () => setState(() {
-                        newStock = (newStock + 10).clamp(0, 999999);
-                        controller.text = newStock.toString();
-                      }),
-                      icon: const Icon(Icons.keyboard_double_arrow_up),
-                    ),
-                  ],
+
+                // BUTTON +/- RESPONSIF
+                LayoutBuilder(
+                  builder: (context, c) {
+                    double iconSize = c.maxWidth < 300 ? 22 : 28;
+
+                    return Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        IconButton(
+                          iconSize: iconSize,
+                          onPressed: () => setState(() {
+                            newStock = (newStock - 10).clamp(0, 999999);
+                            controller.text = newStock.toString();
+                          }),
+                          icon: const Icon(Icons.keyboard_double_arrow_down),
+                        ),
+                        IconButton(
+                          iconSize: iconSize,
+                          onPressed: () => setState(() {
+                            newStock = (newStock - 1).clamp(0, 999999);
+                            controller.text = newStock.toString();
+                          }),
+                          icon: const Icon(Icons.remove_circle_outline),
+                        ),
+                        IconButton(
+                          iconSize: iconSize,
+                          onPressed: () => setState(() {
+                            newStock = (newStock + 1).clamp(0, 999999);
+                            controller.text = newStock.toString();
+                          }),
+                          icon: const Icon(Icons.add_circle_outline),
+                        ),
+                        IconButton(
+                          iconSize: iconSize,
+                          onPressed: () => setState(() {
+                            newStock = (newStock + 10).clamp(0, 999999);
+                            controller.text = newStock.toString();
+                          }),
+                          icon: const Icon(Icons.keyboard_double_arrow_up),
+                        ),
+                      ],
+                    );
+                  },
                 ),
 
-                const SizedBox(height: 20),
-                ElevatedButton(
-                  style: ElevatedButton.styleFrom(backgroundColor: Colors.blue),
-                  onPressed: () async {
-                    Navigator.pop(context);
+                const SizedBox(height: 25),
 
-                    await _updateStockInFirestore(
-                        itemId, name, desc, newStock, stock);
+                // BUTTON ROW: SAVE + DELETE (HANYA MANAGER)
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    if (userRole == "whmanager")
+                      Expanded(
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.red,
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12)),
+                          ),
+                          onPressed: () async {
+                            Navigator.pop(context);
+                            _showDeleteConfirmation(context, itemId, name);
+                          },
+                          child: const Text("Hapus",
+                              style: TextStyle(color: Colors.white)),
+                        ),
+                      ),
 
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                            content: Text("Stok berhasil diperbarui!")),
-                      );
-                    },
-                  child: const Text("Simpan",
-                      style: TextStyle(color: Colors.white)),
+                    if (userRole == "whmanager")
+                      const SizedBox(width: 12),
+
+                    Expanded(
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.blue,
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12)),
+                        ),
+                        onPressed: () async {
+                          Navigator.pop(context);
+                          await _updateStockInFirestore(
+                              itemId, name, desc, newStock, stock);
+
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                                content: Text("Stok berhasil diperbarui!")),
+                          );
+                        },
+                        child: const Text("Simpan",
+                            style: TextStyle(color: Colors.white)),
+                      ),
+                    ),
+                  ],
                 )
               ],
             ),
@@ -203,6 +252,7 @@ class ProductList extends StatelessWidget {
       ),
     );
   }
+
 
   // =====================================================
   // BUILD PRODUCT LIST
@@ -274,8 +324,8 @@ class ProductList extends StatelessWidget {
                     desc: desc,
                     qty: qty,
                     itemId: itemId,
-                    onTap: () =>
-                        _showStockPopup(context, name, desc, qty, itemId),
+                      onTap: () =>
+                          _showStockPopup(context, name, desc, qty, itemId, userRole),
                   );
                 },
               ),
@@ -351,42 +401,7 @@ class _AnimatedProductTileState extends State<_AnimatedProductTile> {
             splashColor: AppColors.blueMain.withOpacity(0.12),
             highlightColor: AppColors.blueMain.withOpacity(0.08),
             onTap: widget.onTap,
-            onLongPress: () {
-  final id = widget.itemId;
-  final name = widget.name;
 
-  showDialog(
-    context: context,
-    builder: (ctx) => AlertDialog(
-      title: const Text("Hapus Barang"),
-      content: Text("Apakah Anda yakin ingin menghapus \"$name\"?"),
-      actions: [
-        TextButton(
-          child: const Text("Batal"),
-          onPressed: () => Navigator.pop(ctx),
-        ),
-        ElevatedButton(
-          style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-          child: const Text("Hapus", style: TextStyle(color: Colors.white)),
-          onPressed: () async {
-            Navigator.pop(ctx);
-
-            await FirebaseFirestore.instance
-                .collection("items")
-                .doc(id)
-                .delete();
-
-            if (context.mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text("$name dihapus!")),
-              );
-            }
-          },
-        ),
-      ],
-    ),
-  );
-},
 
             child: Container(
               padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
