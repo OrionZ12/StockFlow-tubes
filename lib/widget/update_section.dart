@@ -20,34 +20,30 @@ class _UpdateSectionState extends State<UpdateSection> {
   }
 
   // =====================================================
-  // AMBIL 2 ITEM TERLARIS & 2 ITEM HAMPIR HABIS
+  // LOAD: 2 TERLARIS & 2 HAMPIR HABIS
   // =====================================================
   Future<void> _loadTopProducts() async {
     try {
       final snapshot =
           await FirebaseFirestore.instance.collection("items").get();
 
-      final List<Map<String, dynamic>> allItems = snapshot.docs
-          .map((doc) => {
-                "name": doc["name"],
-                "stok": doc["stok"],
-              })
-          .toList();
+      final allItems = snapshot.docs.map((doc) {
+        return {
+          "name": doc["name"],
+          "stok": doc["stok"],
+        };
+      }).toList();
 
-      // Sort stok besar → kecil (terlaris)
-      allItems.sort((a, b) => (b["stok"] as int).compareTo(a["stok"]));
-
-      // Ambil 2 terbesar
+      // Terbanyak
+      allItems.sort((a, b) => (b["stok"]).compareTo(a["stok"]));
       terlaris = allItems.take(2).toList();
 
-      // Sort stok kecil → besar (hampir habis)
-      final List<Map<String, dynamic>> sortedLow = allItems
-          .where((item) => item["stok"] > 0) // hanya stok > 0
-          .toList();
+      // Hampir habis
+      final sortedLow = allItems
+          .where((item) => item["stok"] > 0)
+          .toList()
+        ..sort((a, b) => (a["stok"]).compareTo(b["stok"]));
 
-      sortedLow.sort((a, b) => (a["stok"] as int).compareTo(b["stok"]));
-
-      // Ambil 2 terkecil
       hampirHabis = sortedLow.take(2).toList();
 
       setState(() {});
@@ -68,7 +64,6 @@ class _UpdateSectionState extends State<UpdateSection> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // ====== JUDUL ======
           const Text(
             "Update terbaru",
             style: TextStyle(
@@ -78,55 +73,63 @@ class _UpdateSectionState extends State<UpdateSection> {
             ),
           ),
 
-          const SizedBox(height: 10),
+          const SizedBox(height: 14),
 
           // =====================================================
-          // ROW TERLARIS & HAMPIR HABIS
+          // ROW BARU — SUDAH DIPOSISIKAN KE TENGAH SESUAI PERMINTAAN
           // =====================================================
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
-              // =================== TERLARIS ===================
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Icon(Icons.local_fire_department,
-                      color: AppColors.red),
-                  const SizedBox(height: 4),
-                  const Text(
-                    "Stok Terbanyak:",
-                    style: TextStyle(color: AppColors.textMuted),
-                  ),
-                  ...terlaris.map(
-                    (item) => Text(
-                      "${item['name']} (${item['stok']})",
-                      style: const TextStyle(fontWeight: FontWeight.w600),
-                    ),
-                  ),
-                ],
-              ),
 
-              // ================== HAMPIR HABIS ==================
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Icon(Icons.warning_amber_rounded,
-                      color: AppColors.red),
-                  const SizedBox(height: 4),
-                  const Text(
-                    "Hampir habis:",
-                    style: TextStyle(color: AppColors.textMuted),
-                  ),
-                  ...hampirHabis.map(
-                    (item) => Text(
-                      "${item['name']} (${item['stok']})",
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.red,
+              // =============== TERLARIS ===============
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Icon(Icons.local_fire_department,
+                        color: AppColors.red),
+                    const SizedBox(height: 4),
+                    const Text(
+                      "Stok Terbanyak:",
+                      style: TextStyle(color: AppColors.textMuted),
+                    ),
+                    ...terlaris.map(
+                      (item) => Text(
+                        "${item['name']} (${item['stok']})",
+                        style: const TextStyle(
+                            fontWeight: FontWeight.w600),
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
+              ),
+
+              // Spasi di tengah
+              const SizedBox(width: 30),
+
+              // =============== HAMPIR HABIS ===============
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Icon(Icons.warning_amber_rounded,
+                        color: AppColors.red),
+                    const SizedBox(height: 4),
+                    const Text(
+                      "Hampir habis:",
+                      style: TextStyle(color: AppColors.textMuted),
+                    ),
+                    ...hampirHabis.map(
+                      (item) => Text(
+                        "${item['name']} (${item['stok']})",
+                        style: const TextStyle(
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.red),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ],
           ),
