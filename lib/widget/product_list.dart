@@ -26,7 +26,8 @@ class ProductList extends StatelessWidget {
 
     final userDoc =
         await FirebaseFirestore.instance.collection("users").doc(uid).get();
-    final username = userDoc.data()?["username"] ?? "unknown";
+    final data = userDoc.data() as Map<String, dynamic>;
+    final username = data["name"] ?? "unknown";
 
     int change = newStock - oldStock;
     String type = change > 0 ? "in" : "out";
@@ -148,23 +149,36 @@ class ProductList extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     IconButton(
-                        onPressed: () => setState(
-                            () => newStock = (newStock - 10).clamp(0, 999999)),
-                        icon: const Icon(Icons.keyboard_double_arrow_down)),
+                      onPressed: () => setState(() {
+                        newStock = (newStock - 10).clamp(0, 999999);
+                        controller.text = newStock.toString();
+                      }),
+                      icon: const Icon(Icons.keyboard_double_arrow_down),
+                    ),
                     IconButton(
-                        onPressed: () => setState(
-                            () => newStock = (newStock - 1).clamp(0, 999999)),
-                        icon: const Icon(Icons.remove_circle_outline)),
+                      onPressed: () => setState(() {
+                        newStock = (newStock - 1).clamp(0, 999999);
+                        controller.text = newStock.toString();
+                      }),
+                      icon: const Icon(Icons.remove_circle_outline),
+                    ),
                     IconButton(
-                        onPressed: () => setState(
-                            () => newStock = (newStock + 1).clamp(0, 999999)),
-                        icon: const Icon(Icons.add_circle_outline)),
+                      onPressed: () => setState(() {
+                        newStock = (newStock + 1).clamp(0, 999999);
+                        controller.text = newStock.toString();
+                      }),
+                      icon: const Icon(Icons.add_circle_outline),
+                    ),
                     IconButton(
-                        onPressed: () => setState(
-                            () => newStock = (newStock + 10).clamp(0, 999999)),
-                        icon: const Icon(Icons.keyboard_double_arrow_up)),
+                      onPressed: () => setState(() {
+                        newStock = (newStock + 10).clamp(0, 999999);
+                        controller.text = newStock.toString();
+                      }),
+                      icon: const Icon(Icons.keyboard_double_arrow_up),
+                    ),
                   ],
                 ),
+
                 const SizedBox(height: 20),
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(backgroundColor: Colors.blue),
