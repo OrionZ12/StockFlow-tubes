@@ -18,7 +18,6 @@ class _AddStockPageState extends State<AddStockPage> {
   final TextEditingController supplierCtrl = TextEditingController();
   final TextEditingController descCtrl = TextEditingController();
 
-
   int jumlah = 1;
   List<String> kategoriList = [];
   String? kategoriDipilih;
@@ -29,98 +28,94 @@ class _AddStockPageState extends State<AddStockPage> {
     dateCtrl.text = DateFormat("dd-MM-yyyy").format(DateTime.now());
     _loadCategories();
   }
-Future<void> _saveItem() async {
-  try {
-    final name = nameCtrl.text.trim();
-    final desc = descCtrl.text.trim();
-    final supplier = supplierCtrl.text.trim();
-    final date = dateCtrl.text.trim();
 
-    if (name.isEmpty || kategoriDipilih == null || supplier.isEmpty) {
+  Future<void> _saveItem() async {
+    try {
+      final name = nameCtrl.text.trim();
+      final desc = descCtrl.text.trim();
+      final supplier = supplierCtrl.text.trim();
+      final date = dateCtrl.text.trim();
+
+      if (name.isEmpty || kategoriDipilih == null || supplier.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text("Pastikan semua field wajib terisi!"),
+            backgroundColor: Colors.red,
+          ),
+        );
+        return;
+      }
+
+      final uid = FirebaseAuth.instance.currentUser!.uid;
+
+      // Ambil username
+      final userDoc =
+          await FirebaseFirestore.instance.collection("users").doc(uid).get();
+      final username = userDoc.data()?["username"] ?? "unknown";
+
+      // Cek apakah barang sudah ada
+      final query = await FirebaseFirestore.instance
+          .collection("items")
+          .where("name", isEqualTo: name)
+          .get();
+
+      if (query.docs.isNotEmpty) {
+        // =====================================================
+        //  JIKA ADA → UPDATE STOK
+        // =====================================================
+        final doc = query.docs.first;
+        final stokLama = doc["stok"] ?? 0;
+
+        await doc.reference.update({
+          "stok": stokLama + jumlah,
+          "desc": desc,
+          "category": kategoriDipilih,
+          "supplier": supplier,
+          "date": Timestamp.fromDate(
+    DateFormat("dd-MM-yyyy").parse(date),
+  ),
+          "last_updated": FieldValue.serverTimestamp(),
+          "last_updated_by": uid,
+        });
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("Stok diperbarui menjadi ${stokLama + jumlah}!"),
+            backgroundColor: Colors.green,
+          ),
+        );
+      } else {
+        // =====================================================
+        //  JIKA TIDAK ADA → BUAT BARANG BARU
+        // =====================================================
+        await FirebaseFirestore.instance.collection("items").add({
+          "name": name,
+          "desc": desc,
+          "stok": jumlah,
+          "category": kategoriDipilih,
+          "supplier": supplier,
+          "date": Timestamp.now(),
+          "created_by": uid,
+          "created_by_name": username,
+          "last_updated": FieldValue.serverTimestamp(),
+          "last_updated_by": uid,
+        });
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text("Item baru berhasil ditambahkan!"),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+
+      context.go('/home'); // balik ke home
+    } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("Pastikan semua field wajib terisi!"),
-          backgroundColor: Colors.red,
-        ),
+        SnackBar(content: Text("Gagal menyimpan: $e")),
       );
-      return;
     }
-
-    final uid = FirebaseAuth.instance.currentUser!.uid;
-
-    // Ambil username
-    final userDoc = await FirebaseFirestore.instance
-        .collection("users")
-        .doc(uid)
-        .get();
-    final username = userDoc.data()?["username"] ?? "unknown";
-
-    // Cek apakah barang sudah ada
-    final query = await FirebaseFirestore.instance
-        .collection("items")
-        .where("name", isEqualTo: name)
-        .get();
-
-    if (query.docs.isNotEmpty) {
-      // =====================================================
-      //  JIKA ADA → UPDATE STOK
-      // =====================================================
-      final doc = query.docs.first;
-      final stokLama = doc["stok"] ?? 0;
-
-      await doc.reference.update({
-        "stok": stokLama + jumlah,
-        "desc": desc,
-        "category": kategoriDipilih,
-        "supplier": supplier,
-        "date": date,
-        "last_updated": FieldValue.serverTimestamp(),
-        "last_updated_by": uid,
-      });
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text("Stok diperbarui menjadi ${stokLama + jumlah}!"),
-          backgroundColor: Colors.green,
-        ),
-      );
-
-    } else {
-      // =====================================================
-      //  JIKA TIDAK ADA → BUAT BARANG BARU
-      // =====================================================
-      await FirebaseFirestore.instance.collection("items").add({
-        "name": name,
-        "desc": desc,
-        "stok": jumlah,
-        "category": kategoriDipilih,
-        "supplier": supplier,
-        "date": date,
-        "created_by": uid,
-        "created_by_name": username,
-        "last_updated": FieldValue.serverTimestamp(),
-        "last_updated_by": uid,
-      });
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("Item baru berhasil ditambahkan!"),
-          backgroundColor: Colors.green,
-        ),
-      );
-    }
-
-    context.go('/home'); // balik ke home
-
-  } catch (e) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text("Gagal menyimpan: $e")),
-    );
   }
-}
-
-
-
 
   // =====================================================
   // LOAD KATEGORI
@@ -134,7 +129,6 @@ Future<void> _saveItem() async {
     kategoriList = snap.docs.map((d) => d["name"] as String).toList();
     setState(() {});
   }
-
 
   // =====================================================
   // TAMBAH KATEGORI
@@ -184,7 +178,7 @@ Future<void> _saveItem() async {
               // TAMBAH KE LIST
               kategoriList.add(newCat);
               kategoriList.sort(
-                    (a, b) => a.toLowerCase().compareTo(b.toLowerCase()),
+                (a, b) => a.toLowerCase().compareTo(b.toLowerCase()),
               );
 
               // SIMPAN KE FIRESTORE
@@ -204,7 +198,6 @@ Future<void> _saveItem() async {
       ),
     );
   }
-
 
   // =====================================================
   // HAPUS KATEGORI
@@ -229,7 +222,6 @@ Future<void> _saveItem() async {
 
     setState(() {});
   }
-
 
   // =====================================================
   // POPUP KONFIRMASI DELETE
@@ -293,7 +285,6 @@ Future<void> _saveItem() async {
               const Text("Pilih Kategori",
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
               const SizedBox(height: 10),
-
               Expanded(
                 child: StreamBuilder(
                   stream: FirebaseFirestore.instance
@@ -318,16 +309,13 @@ Future<void> _saveItem() async {
                             setState(() => kategoriDipilih = nama);
                             Navigator.pop(context);
                           },
-
-                          onLongPress: () =>
-                              _confirmDeleteCategory(nama),
+                          onLongPress: () => _confirmDeleteCategory(nama),
                         );
                       },
                     );
                   },
                 ),
               ),
-
               Container(
                 width: double.infinity,
                 padding: const EdgeInsets.all(12),
@@ -353,7 +341,6 @@ Future<void> _saveItem() async {
       },
     );
   }
-
 
   // =====================================================
   // UI DROPDOWN

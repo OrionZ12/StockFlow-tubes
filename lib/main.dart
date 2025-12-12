@@ -6,7 +6,7 @@ import 'provider/app_state_provider.dart';
 import 'provider/auth_provider.dart';
  
 void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
+  WidgetsFlutterBinding.ensureInitialized();  
 
   // Setup a global Flutter error handler to print errors to the console
   FlutterError.onError = (details) {

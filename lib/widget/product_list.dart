@@ -470,4 +470,4 @@ class _AnimatedProductTileState extends State<_AnimatedProductTile> {
       ),
     );
   }
-}
+}  
