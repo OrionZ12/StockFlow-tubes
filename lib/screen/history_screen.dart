@@ -1,26 +1,16 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
 
-class HistoryPage extends StatelessWidget {
+class HistoryPage extends StatefulWidget {
   const HistoryPage({super.key});
 
-  final List<Map<String, dynamic>> historyItems = const [
-    {
-      "title": "Barang Masuk",
-      "desc": "Menambahkan 30 unit Mouse Wireless",
-      "date": "4 Jan 2025"
-    },
-    {
-      "title": "Barang Keluar",
-      "desc": "Mengeluarkan 5 unit Keyboard Gaming",
-      "date": "4 Jan 2025"
-    },
-    {
-      "title": "Stok Diupdate",
-      "desc": "Monitor LED ditambah 12 unit",
-      "date": "3 Jan 2025"
-    },
-  ];
+  @override
+  State<HistoryPage> createState() => _HistoryPageState();
+}
+
+class _HistoryPageState extends State<HistoryPage> {
+  String filterMode = "day"; // day | month
 
   @override
   Widget build(BuildContext context) {
@@ -29,120 +19,222 @@ class HistoryPage extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // 🔵 HEADER (pengganti AppBar, aman tanpa Scaffold)
+
+          // HEADER
           Padding(
             padding: const EdgeInsets.fromLTRB(18, 40, 18, 10),
             child: Row(
-              children: const [
-                Text(
-                  "Stock",
-                  style: TextStyle(
-                    color: AppColors.textPrimary,
-                    fontSize: 19,
-                    fontWeight: FontWeight.bold,
-                  ),
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Row(
+                  children: [
+                    Text(
+                      "Stock",
+                      style: TextStyle(
+                        color: AppColors.textPrimary,
+                        fontSize: 19,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    Text(
+                      "Flow",
+                      style: TextStyle(
+                        color: AppColors.blueMain,
+                        fontSize: 19,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
                 ),
-                Text(
-                  "Flow",
-                  style: TextStyle(
-                    color: AppColors.blueMain,
-                    fontSize: 19,
-                    fontWeight: FontWeight.bold,
-                  ),
+
+                // FILTER
+                DropdownButton(
+                  value: filterMode,
+                  underline: const SizedBox(),
+                  items: const [
+                    DropdownMenuItem(value: "day", child: Text("Per Hari")),
+                    DropdownMenuItem(value: "month", child: Text("Per Bulan")),
+                  ],
+                  onChanged: (value) {
+                    setState(() => filterMode = value!);
+                  },
                 ),
               ],
             ),
           ),
 
-          // 🔵 LIST DATA
+          // LIST
           Expanded(
-            child: ListView.builder(
-              padding: const EdgeInsets.symmetric(horizontal: 18),
-              itemCount: historyItems.length,
-              itemBuilder: (context, index) {
-                final item = historyItems[index];
-                final isLast = index == historyItems.length - 1;
+            child: StreamBuilder(
+              stream: FirebaseFirestore.instance
+                  .collection("history")
+                  .orderBy("timestamp", descending: true)
+                  .snapshots(),
+              builder: (context, snapshot) {
+                if (!snapshot.hasData) {
+                  return const Center(
+                      child: CircularProgressIndicator(color: AppColors.blueMain));
+                }
 
-                return Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // --- Bullet timeline
-                    Column(
+                final docs = snapshot.data!.docs;
+
+                if (docs.isEmpty) {
+                  return const Center(
+                    child: Text(
+                      "Belum ada riwayat...",
+                      style: TextStyle(color: AppColors.textMuted),
+                    ),
+                  );
+                }
+
+                return ListView.builder(
+                  padding: const EdgeInsets.symmetric(horizontal: 18),
+                  itemCount: docs.length,
+                  itemBuilder: (context, index) {
+                    final item = docs[index].data() as Map<String, dynamic>;
+                    final isLast = index == docs.length - 1;
+
+                    final type = item["type"];
+                    final String username = item["username"] ?? "unknown";
+                    final int qty = item["qty_change"] ?? 0;
+                    final String product = item["item_name"] ?? "-";
+
+                    final DateTime time =
+                    (item["timestamp"] as Timestamp).toDate();
+
+// TITLE
+                    String title = "";
+                    if (type == "in") title = "Barang Masuk";
+                    if (type == "out") title = "Barang Keluar";
+                    if (type == "add") title = "Barang Baru";
+                    if (type == "delete") title = "Barang Dihapus";
+
+// ACTION
+                    String action = "";
+                    if (type == "in") action = "menambahkan";
+                    if (type == "out") action = "mengeluarkan";
+                    if (type == "add") action = "membuat barang";
+                    if (type == "delete") action = "menghapus barang";
+
+                    String desc = "$username $action ${qty.abs()} $product";
+
+                    return Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Container(
-                          width: 18,
-                          height: 18,
-                          decoration: BoxDecoration(
-                            color: AppColors.blueSoft,
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                        ),
-                        if (!isLast)
-                          Container(
-                            width: 3,
-                            height: 70,
-                            color: AppColors.blueSoft,
-                          ),
-                      ],
-                    ),
-
-                    const SizedBox(width: 15),
-
-                    // --- Card
-                    Expanded(
-                      child: Container(
-                        margin: const EdgeInsets.only(bottom: 20),
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 18, vertical: 16),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(18),
-                          border: Border.all(color: AppColors.softBorder),
-                          boxShadow: const [
-                            BoxShadow(
-                              color: Colors.black12,
-                              blurRadius: 4,
-                              offset: Offset(0, 1),
-                            )
-                          ],
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                        // DOT + LINE
+                        Column(
                           children: [
-                            Text(
-                              item["title"],
-                              style: const TextStyle(
-                                fontSize: 15,
-                                fontWeight: FontWeight.w600,
-                                color: AppColors.textPrimary,
+                            Container(
+                              width: 18,
+                              height: 18,
+                              decoration: BoxDecoration(
+                                color: AppColors.blueSoft,
+                                borderRadius: BorderRadius.circular(20),
                               ),
                             ),
-                            const SizedBox(height: 4),
-                            Text(
-                              item["desc"],
-                              style: const TextStyle(
-                                fontSize: 13,
-                                color: AppColors.textSecondary,
+                            if (!isLast)
+                              Container(
+                                width: 3,
+                                height: 70,
+                                color: AppColors.blueSoft,
                               ),
-                            ),
-                            const SizedBox(height: 10),
-                            Text(
-                              item["date"],
-                              style: const TextStyle(
-                                fontSize: 12,
-                                color: AppColors.textMuted,
-                              ),
-                            ),
                           ],
                         ),
-                      ),
-                    ),
-                  ],
+
+                        const SizedBox(width: 15),
+
+                        // CARD
+                        Expanded(
+                          child: GestureDetector(
+                            onTap: () => _showDetail(context, item),
+                            child: Container(
+                              margin: const EdgeInsets.only(bottom: 20),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 18, vertical: 16),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(18),
+                                border: Border.all(color: AppColors.softBorder),
+                                boxShadow: const [
+                                  BoxShadow(
+                                    color: Colors.black12,
+                                    blurRadius: 4,
+                                    offset: Offset(0, 1),
+                                  )
+                                ],
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    title,
+                                    style: const TextStyle(
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.w600,
+                                      color: AppColors.textPrimary,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    desc,
+                                    style: const TextStyle(
+                                      fontSize: 13,
+                                      color: AppColors.textSecondary,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 10),
+                                  Text(
+                                    "${time.day}/${time.month}/${time.year}",
+                                    style: const TextStyle(
+                                      fontSize: 12,
+                                      color: AppColors.textMuted,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    );
+                  },
                 );
               },
             ),
           ),
+
         ],
+      ),
+    );
+  }
+
+  void _showDetail(BuildContext context, Map<String, dynamic> item) {
+    final DateTime time =
+    (item["timestamp"] as Timestamp).toDate();
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (_) => Container(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text("Detail Aktivitas",
+                style: TextStyle(
+                    fontSize: 18, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 15),
+            Text("User: ${item["username"]}"),
+            Text("Jenis: ${item["type"]}"),
+            Text("Jumlah: ${item["qty_change"]}"),
+            Text("Barang: ${item["item_name"]}"),
+            Text("Waktu: $time"),
+          ],
+        ),
       ),
     );
   }
