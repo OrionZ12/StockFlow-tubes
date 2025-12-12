@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../theme/app_colors.dart';
-import '../services/firestore_service.dart';
 
 class ProductList extends StatelessWidget {
   final List products;
@@ -12,33 +11,36 @@ class ProductList extends StatelessWidget {
     required this.products,
   });
 
+  // =====================================================
+  // UPDATE STOCK + HISTORY
+  // =====================================================
   Future<void> _updateStockInFirestore(
-      String itemId, String name, String desc, int newStock, int oldStock) async {
+    String itemId,
+    String name,
+    String desc,
+    int newStock,
+    int oldStock,
+  ) async {
+    final user = FirebaseAuth.instance.currentUser!;
+    final uid = user.uid;
 
-    final user = FirebaseAuth.instance.currentUser;
-    final uid = user!.uid;
-
-    // ambil username
-    final userDoc = await FirebaseFirestore.instance
-        .collection("users")
-        .doc(uid)
-        .get();
+    final userDoc =
+        await FirebaseFirestore.instance.collection("users").doc(uid).get();
     final username = userDoc.data()?["username"] ?? "unknown";
 
-    // tentukan perubahan stok
     int change = newStock - oldStock;
     String type = change > 0 ? "in" : "out";
 
-    // update stok pada item
-    await FirebaseFirestore.instance.collection("items").doc(itemId).set({
+    // Update stok
+    await FirebaseFirestore.instance.collection("items").doc(itemId).update({
       "stok": newStock,
       "last_updated": FieldValue.serverTimestamp(),
       "last_updated_by": uid,
-    }, SetOptions(merge: true));
+    });
 
-    // CATAT RIWAYAT
+    // Tambah ke history jika ada perubahan
     if (change != 0) {
-      await FirebaseFirestore.instance.collection("history").add({
+      FirebaseFirestore.instance.collection("history").add({
         "type": type,
         "item_name": name,
         "item_id": itemId,
@@ -51,7 +53,47 @@ class ProductList extends StatelessWidget {
     }
   }
 
+  // =====================================================
+  // POPUP DELETE
+  // =====================================================
+  Future<void> _deleteItem(
+      BuildContext context, String itemId, String name) async {
+    await FirebaseFirestore.instance.collection("items").doc(itemId).delete();
 
+    // Firestore StreamBuilder di HomeScreen akan auto-refresh
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text("$name berhasil dihapus!")),
+    );
+  }
+
+  void _showDeleteConfirmation(
+      BuildContext context, String itemId, String name) {
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text("Hapus Barang"),
+        content: Text("Apakah Anda yakin ingin menghapus \"$name\"?"),
+        actions: [
+          TextButton(
+            child: const Text("Batal"),
+            onPressed: () => Navigator.pop(context),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            child: const Text("Hapus", style: TextStyle(color: Colors.white)),
+            onPressed: () async {
+              Navigator.pop(context);
+              await _deleteItem(context, itemId, name);
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  // =====================================================
+  // POPUP UPDATE STOK
+  // =====================================================
   void _showStockPopup(BuildContext context, String name, String desc,
       int stock, String itemId) {
     int newStock = stock;
@@ -67,118 +109,90 @@ class ProductList extends StatelessWidget {
     showDialog(
       context: context,
       barrierDismissible: true,
-      builder: (context) {
-        return StatefulBuilder(
-          builder: (context, setState) {
-            return Dialog(
-              insetPadding: const EdgeInsets.all(20),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(25),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(24),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
+      builder: (_) => StatefulBuilder(
+        builder: (context, setState) => Dialog(
+          insetPadding: const EdgeInsets.all(20),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(name,
+                    style: const TextStyle(
+                        fontSize: 22, fontWeight: FontWeight.bold)),
+                const SizedBox(height: 10),
+                Text("Stok terakhir: $stock",
+                    style: const TextStyle(fontSize: 16)),
+                const SizedBox(height: 20),
+                SizedBox(
+                  width: 130,
+                  child: TextField(
+                    controller: controller,
+                    keyboardType: TextInputType.number,
+                    textAlign: TextAlign.center,
+                    onChanged: (v) {
+                      setState(() {
+                        newStock = int.tryParse(v) ?? newStock;
+                      });
+                    },
+                    decoration: InputDecoration(
+                      border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12)),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 20),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Text(
-                      name,
-                      style: const TextStyle(
-                          fontSize: 22, fontWeight: FontWeight.bold),
-                    ),
-                    const SizedBox(height: 10),
-
-                    Text("Stok terakhir: $stock",
-                        style: const TextStyle(fontSize: 16)),
-                    const SizedBox(height: 20),
-
-                    SizedBox(
-                      width: 130,
-                      child: TextField(
-                        controller: controller,
-                        keyboardType: TextInputType.number,
-                        textAlign: TextAlign.center,
-                        onChanged: (value) {
-                          setState(() {
-                            newStock = int.tryParse(value) ?? newStock;
-                          });
-                        },
-                        decoration: InputDecoration(
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                      ),
-                    ),
-
-                    const SizedBox(height: 20),
-
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        IconButton(
-                          onPressed: () => updateStock(-10, setState),
-                          icon: const Icon(Icons.keyboard_double_arrow_down,
-                              size: 30),
-                        ),
-                        IconButton(
-                          onPressed: () => updateStock(-1, setState),
-                          icon: const Icon(Icons.remove_circle_outline,
-                              size: 32),
-                        ),
-                        IconButton(
-                          onPressed: () => updateStock(1, setState),
-                          icon:
-                          const Icon(Icons.add_circle_outline, size: 32),
-                        ),
-                        IconButton(
-                          onPressed: () => updateStock(10, setState),
-                          icon: const Icon(Icons.keyboard_double_arrow_up,
-                              size: 30),
-                        ),
-                      ],
-                    ),
-
-                    const SizedBox(height: 20),
-
-                    ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.blue,
-                        padding: const EdgeInsets.symmetric(
-                            vertical: 12, horizontal: 40),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(14),
-                        ),
-                      ),
-                      onPressed: () async {
-                        Navigator.pop(context);
-
-                        await _updateStockInFirestore(
-                          itemId,
-                          name,
-                          desc,
-                          newStock,
-                          stock, // ← oldStock
-                        );
-
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text("Stok berhasil diperbarui!")),
-                        );
-                      },
-
-                      child: const Text("Simpan",
-                          style:
-                          TextStyle(color: Colors.white, fontSize: 18)),
-                    ),
+                    IconButton(
+                        onPressed: () => setState(
+                            () => newStock = (newStock - 10).clamp(0, 999999)),
+                        icon: const Icon(Icons.keyboard_double_arrow_down)),
+                    IconButton(
+                        onPressed: () => setState(
+                            () => newStock = (newStock - 1).clamp(0, 999999)),
+                        icon: const Icon(Icons.remove_circle_outline)),
+                    IconButton(
+                        onPressed: () => setState(
+                            () => newStock = (newStock + 1).clamp(0, 999999)),
+                        icon: const Icon(Icons.add_circle_outline)),
+                    IconButton(
+                        onPressed: () => setState(
+                            () => newStock = (newStock + 10).clamp(0, 999999)),
+                        icon: const Icon(Icons.keyboard_double_arrow_up)),
                   ],
                 ),
-              ),
-            );
-          },
-        );
-      },
+                const SizedBox(height: 20),
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(backgroundColor: Colors.blue),
+                  onPressed: () async {
+                    Navigator.pop(context);
+
+                    await _updateStockInFirestore(
+                        itemId, name, desc, newStock, stock);
+
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                            content: Text("Stok berhasil diperbarui!")),
+                      );
+                    },
+                  child: const Text("Simpan",
+                      style: TextStyle(color: Colors.white)),
+                )
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 
+  // =====================================================
+  // BUILD PRODUCT LIST
+  // =====================================================
   @override
   Widget build(BuildContext context) {
     return LayoutBuilder(
@@ -226,9 +240,7 @@ class ProductList extends StatelessWidget {
                 ],
               ),
             ),
-
             const SizedBox(height: 6),
-
             Expanded(
               child: ListView.separated(
                 itemCount: products.length,
@@ -247,8 +259,9 @@ class ProductList extends StatelessWidget {
                     name: name,
                     desc: desc,
                     qty: qty,
-                    onTap: () => _showStockPopup(
-                        context, name, desc, qty, itemId),
+                    itemId: itemId,
+                    onTap: () =>
+                        _showStockPopup(context, name, desc, qty, itemId),
                   );
                 },
               ),
@@ -273,6 +286,7 @@ class _AnimatedProductTile extends StatefulWidget {
   final String name;
   final String desc;
   final int qty;
+  final String itemId;
 
   final VoidCallback onTap;
 
@@ -285,6 +299,7 @@ class _AnimatedProductTile extends StatefulWidget {
     required this.desc,
     required this.qty,
     required this.onTap,
+    required this.itemId,
   });
 
   @override
@@ -322,6 +337,43 @@ class _AnimatedProductTileState extends State<_AnimatedProductTile> {
             splashColor: AppColors.blueMain.withOpacity(0.12),
             highlightColor: AppColors.blueMain.withOpacity(0.08),
             onTap: widget.onTap,
+            onLongPress: () {
+  final id = widget.itemId;
+  final name = widget.name;
+
+  showDialog(
+    context: context,
+    builder: (ctx) => AlertDialog(
+      title: const Text("Hapus Barang"),
+      content: Text("Apakah Anda yakin ingin menghapus \"$name\"?"),
+      actions: [
+        TextButton(
+          child: const Text("Batal"),
+          onPressed: () => Navigator.pop(ctx),
+        ),
+        ElevatedButton(
+          style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+          child: const Text("Hapus", style: TextStyle(color: Colors.white)),
+          onPressed: () async {
+            Navigator.pop(ctx);
+
+            await FirebaseFirestore.instance
+                .collection("items")
+                .doc(id)
+                .delete();
+
+            if (context.mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text("$name dihapus!")),
+              );
+            }
+          },
+        ),
+      ],
+    ),
+  );
+},
+
             child: Container(
               padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
               decoration: BoxDecoration(
@@ -356,7 +408,6 @@ class _AnimatedProductTileState extends State<_AnimatedProductTile> {
                       ],
                     ),
                   ),
-
                   Expanded(
                     flex: 1,
                     child: Align(

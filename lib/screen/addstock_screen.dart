@@ -29,34 +29,66 @@ class _AddStockPageState extends State<AddStockPage> {
     dateCtrl.text = DateFormat("dd-MM-yyyy").format(DateTime.now());
     _loadCategories();
   }
-  Future<void> _saveItem() async {
-    try {
-      final name = nameCtrl.text.trim();
-      final desc = descCtrl.text.trim();
-      final supplier = supplierCtrl.text.trim();
-      final date = dateCtrl.text.trim();
+Future<void> _saveItem() async {
+  try {
+    final name = nameCtrl.text.trim();
+    final desc = descCtrl.text.trim();
+    final supplier = supplierCtrl.text.trim();
+    final date = dateCtrl.text.trim();
 
-      if (name.isEmpty || kategoriDipilih == null || supplier.isEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text("Pastikan semua field wajib terisi!"),
-            backgroundColor: Colors.red,
-          ),
-        );
-        return;
-      }
+    if (name.isEmpty || kategoriDipilih == null || supplier.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Pastikan semua field wajib terisi!"),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
 
-      final uid = FirebaseAuth.instance.currentUser!.uid;
-      final user = FirebaseAuth.instance.currentUser!;
+    final uid = FirebaseAuth.instance.currentUser!.uid;
 
-      // Ambil username dari Firestore (lebih rapih daripada email)
-      final userDoc = await FirebaseFirestore.instance
-          .collection("users")
-          .doc(uid)
-          .get();
+    // Ambil username
+    final userDoc = await FirebaseFirestore.instance
+        .collection("users")
+        .doc(uid)
+        .get();
+    final username = userDoc.data()?["username"] ?? "unknown";
 
-      final username = userDoc.data()?["username"] ?? "unknown";
+    // Cek apakah barang sudah ada
+    final query = await FirebaseFirestore.instance
+        .collection("items")
+        .where("name", isEqualTo: name)
+        .get();
 
+    if (query.docs.isNotEmpty) {
+      // =====================================================
+      //  JIKA ADA → UPDATE STOK
+      // =====================================================
+      final doc = query.docs.first;
+      final stokLama = doc["stok"] ?? 0;
+
+      await doc.reference.update({
+        "stok": stokLama + jumlah,
+        "desc": desc,
+        "category": kategoriDipilih,
+        "supplier": supplier,
+        "date": date,
+        "last_updated": FieldValue.serverTimestamp(),
+        "last_updated_by": uid,
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("Stok diperbarui menjadi ${stokLama + jumlah}!"),
+          backgroundColor: Colors.green,
+        ),
+      );
+
+    } else {
+      // =====================================================
+      //  JIKA TIDAK ADA → BUAT BARANG BARU
+      // =====================================================
       await FirebaseFirestore.instance.collection("items").add({
         "name": name,
         "desc": desc,
@@ -64,8 +96,6 @@ class _AddStockPageState extends State<AddStockPage> {
         "category": kategoriDipilih,
         "supplier": supplier,
         "date": date,
-
-        // Field metadata
         "created_by": uid,
         "created_by_name": username,
         "last_updated": FieldValue.serverTimestamp(),
@@ -74,18 +104,21 @@ class _AddStockPageState extends State<AddStockPage> {
 
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text("Item berhasil disimpan!"),
+          content: Text("Item baru berhasil ditambahkan!"),
           backgroundColor: Colors.green,
         ),
       );
-
-      context.go('/home');
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Gagal menyimpan: $e")),
-      );
     }
+
+    context.go('/home'); // balik ke home
+
+  } catch (e) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text("Gagal menyimpan: $e")),
+    );
   }
+}
+
 
 
 
