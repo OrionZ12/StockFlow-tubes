@@ -18,17 +18,17 @@ class ProductList extends StatelessWidget {
   // UPDATE STOCK + HISTORY
   // =====================================================
   Future<void> _updateStockInFirestore(
-    String itemId,
-    String name,
-    String desc,
-    int newStock,
-    int oldStock,
-  ) async {
+      String itemId,
+      String name,
+      String desc,
+      int newStock,
+      int oldStock,
+      ) async {
     final user = FirebaseAuth.instance.currentUser!;
     final uid = user.uid;
 
     final userDoc =
-        await FirebaseFirestore.instance.collection("users").doc(uid).get();
+    await FirebaseFirestore.instance.collection("users").doc(uid).get();
     final data = userDoc.data() as Map<String, dynamic>;
     final username = data["name"] ?? "unknown";
 
@@ -324,8 +324,8 @@ class ProductList extends StatelessWidget {
                     desc: desc,
                     qty: qty,
                     itemId: itemId,
-                      onTap: () =>
-                          _showStockPopup(context, name, desc, qty, itemId, userRole),
+                    onTap: () =>
+                        _showStockPopup(context, name, desc, qty, itemId, userRole),
                   );
                 },
               ),
@@ -470,4 +470,4 @@ class _AnimatedProductTileState extends State<_AnimatedProductTile> {
       ),
     );
   }
-}  
+}
