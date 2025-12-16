@@ -172,6 +172,10 @@ class _ProfilePageState extends State<ProfilePage> {
                           () => context.go(AppRoutes.changePassword),
                     ),
                     _menu(
+                    "Daftar Akun",  
+                    () => context.go(AppRoutes.userVerification)
+                    ),
+                    _menu(
                       "Keluar Akun",
                       _showLogoutDialog,
                     ),

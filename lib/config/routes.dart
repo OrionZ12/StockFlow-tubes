@@ -18,6 +18,7 @@ import 'package:tubes/screen/signsuc_screen.dart';
 import '../screen/splash_screen.dart';
 import '../screen/firstime_screen.dart';
 import '../screen/login_screen.dart';
+import '../screen/userverification_screen.dart';
 import '../screen/home_screen.dart';
 import '../widget/app_scaffold.dart';
 
@@ -43,6 +44,8 @@ class AppRoutes {
   static const String changePassword = '/change-password';
   static const String changePasswordSuccess = '/change-password-success';
   static const String logoutConfirm = '/logout-confirm';
+  static const userVerification = '/user-verification';
+
 
   // ➕ Halaman Tambahan
   static const String addStock = '/addstock';
@@ -80,6 +83,11 @@ GoRouter createRouter() {
         path: AppRoutes.signSuccess,
         builder: (_, __) => const SignsucScreen(),
       ),
+      GoRoute(
+        path: AppRoutes.userVerification,
+        builder: (context, state) => const UserVerificationPage(),
+      ),
+
 
       // =============================
       // MAIN PAGES (WITH BOTTOM NAV)
