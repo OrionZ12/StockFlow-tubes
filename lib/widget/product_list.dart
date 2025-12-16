@@ -408,6 +408,7 @@ class _AnimatedProductTileState extends State<_AnimatedProductTile> {
               showDialog(
                 context: context,
                 builder: (ctx) => AlertDialog(
+                  backgroundColor: AppColors.blueSoft,
                   title: const Text("Hapus Barang"),
                   content: Text("Apakah Anda yakin ingin menghapus \"$name\"?"),
                   actions: [
