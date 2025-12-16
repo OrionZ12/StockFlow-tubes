@@ -402,6 +402,39 @@ class _AnimatedProductTileState extends State<_AnimatedProductTile> {
             highlightColor: AppColors.blueMain.withOpacity(0.08),
             onTap: widget.onTap,
 
+            onLongPress: () {
+              final id = widget.itemId;
+              final name = widget.name;
+              showDialog(
+                context: context,
+                builder: (ctx) => AlertDialog(
+                  title: const Text("Hapus Barang"),
+                  content: Text("Apakah Anda yakin ingin menghapus \"$name\"?"),
+                  actions: [
+                    TextButton(
+                      child: const Text("Batal"),
+                      onPressed: () => Navigator.pop(ctx),
+                      ),
+                      ElevatedButton(
+                        style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+                        child: const Text("Hapus", style: TextStyle(color: Colors.white)),
+                        onPressed: () async {
+                          Navigator.pop(ctx);
+                          await FirebaseFirestore.instance
+                          .collection("items")
+                          .doc(id)
+                          .delete();
+                          if (context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text("$name dihapus!")),
+                            );
+                          }
+                        },
+                      ),
+                    ],
+                  ),
+                );
+              },
 
             child: Container(
               padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
