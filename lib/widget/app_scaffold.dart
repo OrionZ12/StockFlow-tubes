@@ -6,27 +6,25 @@ import '../config/routes.dart';
 
 class AppScaffold extends StatelessWidget {
   final Widget child;
+  final GoRouterState state;
 
-  const AppScaffold({super.key, required this.child});
+  const AppScaffold({
+    super.key,
+    required this.child,
+    required this.state,
+  });
 
-  // Menentukan index menu berdasarkan lokasi router
   int _indexFromLocation(String location) {
-    // Semua halaman yang masih “bagian dari profil”
+    if (location.startsWith(AppRoutes.notification)) return 2;
     if (location.startsWith(AppRoutes.profile) ||
         location.startsWith(AppRoutes.account) ||
-        location.startsWith(AppRoutes.notificationSettings) ||
         location.startsWith(AppRoutes.changePassword)) {
-      return 2; // Profil
+      return 3;
     }
-
-    // Halaman riwayat
     if (location.startsWith(AppRoutes.history)) return 1;
-
-    // Default: beranda
     return 0;
   }
 
-  // Navigasi bottom nav
   void _onNavTap(BuildContext context, int index) {
     switch (index) {
       case 0:
@@ -36,15 +34,14 @@ class AppScaffold extends StatelessWidget {
         context.go(AppRoutes.history);
         break;
       case 2:
-        context.go(AppRoutes.profile);
+        context.push(AppRoutes.profile);
         break;
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final routerState = GoRouterState.of(context);
-    final currentIndex = _indexFromLocation(routerState.uri.toString());
+    final currentIndex = _indexFromLocation(state.uri.toString());
 
     return Scaffold(
       backgroundColor: const Color(0xFFF5F6FF),
@@ -56,3 +53,4 @@ class AppScaffold extends StatelessWidget {
     );
   }
 }
+

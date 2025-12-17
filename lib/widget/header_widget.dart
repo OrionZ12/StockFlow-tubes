@@ -31,7 +31,7 @@ class HeaderWidget extends StatelessWidget {
 
         // 🔔 Tombol notifikasi (kanan atas)
         GestureDetector(
-          onTap: () => context.go(AppRoutes.notification),
+          onTap: () => context.push(AppRoutes.notification),
           child: Container(
             width: 38,
             height: 38,

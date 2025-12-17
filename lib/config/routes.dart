@@ -58,7 +58,6 @@ GoRouter createRouter() {
     initialLocation: AppRoutes.splash,
 
     routes: [
-
       // =============================
       // NO NAVBAR SCREENS
       // =============================
@@ -88,46 +87,33 @@ GoRouter createRouter() {
       ),
 
       // =============================
-      // MAIN AREA (WITH BOTTOM NAV)
+      // MAIN AREA (BOTTOM NAV ONLY)
       // =============================
       ShellRoute(
         builder: (context, state, child) {
-          return AppScaffold(child: child);
+          return AppScaffold(
+            child: child,
+            state: state,
+          );
         },
         routes: [
-
-          // TAB 0 — HOME
           GoRoute(
             path: AppRoutes.home,
             builder: (_, __) => const HomeScreen(),
           ),
-
-          // TAB 1 — HISTORY
           GoRoute(
             path: AppRoutes.history,
             builder: (_, __) => const HistoryPage(),
           ),
-
-          // TAB 2 — PROFILE
           GoRoute(
             path: AppRoutes.profile,
             builder: (_, __) => const ProfilePage(),
-          ),
-
-          // STILL PROFILE TAB
-          GoRoute(
-            path: AppRoutes.account,
-            builder: (_, __) => const AccountPage(),
-          ),
-          GoRoute(
-            path: AppRoutes.changePassword,
-            builder: (_, __) => const ChangePasswordScreen(),
           ),
         ],
       ),
 
       // =============================
-      // OUTSIDE NAVBAR
+      // STACKED PAGES (LAYER KE-2)
       // =============================
       GoRoute(
         path: AppRoutes.notification,
@@ -137,6 +123,18 @@ GoRouter createRouter() {
         path: AppRoutes.notificationSettings,
         builder: (_, __) => const NotificationSettingsPage(),
       ),
+      GoRoute(
+        path: AppRoutes.account,
+        builder: (_, __) => const AccountPage(),
+      ),
+      GoRoute(
+        path: AppRoutes.changePassword,
+        builder: (_, __) => const ChangePasswordScreen(),
+      ),
+
+      // =============================
+      // OUTSIDE NAVBAR
+      // =============================
       GoRoute(
         path: AppRoutes.changePasswordSuccess,
         builder: (_, __) => const ChangePasswordSuccessScreen(),
@@ -151,9 +149,6 @@ GoRouter createRouter() {
       ),
     ],
 
-    // =============================
-    // ERROR PAGE
-    // =============================
     errorBuilder: (context, state) => Scaffold(
       body: Center(
         child: Text(
@@ -165,3 +160,4 @@ GoRouter createRouter() {
     ),
   );
 }
+
