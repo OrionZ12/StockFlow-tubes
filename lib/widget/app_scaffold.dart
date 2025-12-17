@@ -15,29 +15,35 @@ class AppScaffold extends StatelessWidget {
   });
 
   int _indexFromLocation(String location) {
-    if (location.startsWith(AppRoutes.notification)) return 2;
-    if (location.startsWith(AppRoutes.profile) ||
-        location.startsWith(AppRoutes.account) ||
-        location.startsWith(AppRoutes.changePassword)) {
-      return 3;
-    }
-    if (location.startsWith(AppRoutes.history)) return 1;
-    return 0;
+  if (location.startsWith(AppRoutes.home)) return 0;
+
+  if (location.startsWith(AppRoutes.history)) return 1;
+
+  if (location.startsWith(AppRoutes.profile) ||
+      location.startsWith(AppRoutes.account) ||
+      location.startsWith(AppRoutes.changePassword) ||
+      location.startsWith(AppRoutes.notification)) {
+    return 2; // ✅ PROFIL
   }
 
+  return 0;
+}
+
+
   void _onNavTap(BuildContext context, int index) {
-    switch (index) {
-      case 0:
-        context.go(AppRoutes.home);
-        break;
-      case 1:
-        context.go(AppRoutes.history);
-        break;
-      case 2:
-        context.push(AppRoutes.profile);
-        break;
-    }
+  switch (index) {
+    case 0:
+      context.go(AppRoutes.home);
+      break;
+    case 1:
+      context.go(AppRoutes.history);
+      break;
+    case 2:
+      context.go(AppRoutes.profile);
+      break;
   }
+}
+
 
   @override
   Widget build(BuildContext context) {

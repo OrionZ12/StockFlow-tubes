@@ -262,7 +262,7 @@ Future<void> _handleSignUp() async {
   // ===============================
   // KIRIM EMAIL VERIFIKASI
   // ===============================
-  await auth.sendEmailVerification();
+  // await auth.sendEmailVerification();
 
   // ===============================
   // TAMPILKAN POPUP KONFIRMASI

@@ -153,48 +153,46 @@ class AuthProvider extends ChangeNotifier {
   // =========================================================
   // SIGN UP (UPDATED)
   // =========================================================
-  Future<String> signUpWithEmail(String email, String password, String name) async {
-    _isLoading = true;
-    notifyListeners();
+  Future<String> signUpWithEmail(
+    String email, String password, String name) async {
+  _isLoading = true;
+  notifyListeners();
 
-    try {
-      UserCredential credential = await _authService.signUp(
-        email: email,
-        password: password,
-      );
+  try {
+    UserCredential credential = await _authService.signUp(
+      email: email,
+      password: password,
+    );
 
-      String uid = credential.user!.uid;
-
-      // Simpan user ke Firestore
-      await FirebaseFirestore.instance.collection("users").doc(uid).set({
-        "uid": uid,
-        "email": email,
-        "name": name,
-        "verified": false, // untuk verifikasi admin
-        "role": "none",
-        "createdAt": FieldValue.serverTimestamp(),
-      });
-
-      // 🔥 Kirim VERIFIKASI EMAIL
-      await credential.user!.sendEmailVerification();
-
-      _isLoading = false;
-      notifyListeners();
-      return "success";
-
-    } on FirebaseAuthException catch (e) {
-      _isLoading = false;
-      notifyListeners();
-
-      if (e.code == "weak-password") return "Password terlalu lemah.";
-      if (e.code == "email-already-in-use") return "Email sudah terdaftar.";
-      return e.message ?? "Gagal mendaftar.";
-    } catch (e) {
-      _isLoading = false;
-      notifyListeners();
-      return "Error: $e";
+    final user = credential.user;
+    if (user == null) {
+      return "Gagal membuat akun.";
     }
+
+    final uid = user.uid;
+
+    await FirebaseFirestore.instance.collection("users").doc(uid).set({
+      "uid": uid,
+      "email": email,
+      "name": name,
+      "role": "staff",
+      "verified": false, // admin approval
+      "createdAt": FieldValue.serverTimestamp(),
+    });
+
+    // Kirim email verifikasi
+    await user.sendEmailVerification();
+
+    return "success";
+  } catch (e) {
+    return "Error: $e";
+  } finally {
+    _isLoading = false;
+    notifyListeners();
   }
+}
+
+
 
   // =========================================================
   // LOGOUT

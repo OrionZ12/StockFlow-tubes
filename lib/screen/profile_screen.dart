@@ -121,9 +121,11 @@ class _ProfilePageState extends State<ProfilePage> {
 
   @override
   Widget build(BuildContext context) {
+    final auth = context.watch<AuthProvider>();
+    final isManager = auth.role == "whmanager"; 
     return Scaffold(
       backgroundColor: const Color(0xFFE6EDFE),
-      body: SafeArea(
+        body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
           child: Column(
@@ -161,20 +163,21 @@ class _ProfilePageState extends State<ProfilePage> {
                   children: [
                     _menu(
                       "Informasi Akun",
-                          () => context.go(AppRoutes.account),
+                      () => context.go(AppRoutes.account),
                     ),
                     _menu(
                       "Kelola Notifikasi",
-                          () => context.go(AppRoutes.notificationSettings),
+                      () => context.go(AppRoutes.notificationSettings),
                     ),
                     _menu(
                       "Ganti Kata Sandi",
-                          () => context.go(AppRoutes.changePassword),
+                      () => context.go(AppRoutes.changePassword),
                     ),
-                    _menu(
-                    "Daftar Akun",  
-                    () => context.go(AppRoutes.userVerification)
-                    ),
+                    if(isManager)
+                      _menu(
+                        "Daftar Akun",
+                        () => context.go(AppRoutes.userVerification),
+                      ),
                     _menu(
                       "Keluar Akun",
                       _showLogoutDialog,
