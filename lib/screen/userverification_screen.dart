@@ -1,13 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:go_router/go_router.dart';
+import '../config/routes.dart';
 import '../theme/app_colors.dart';
-import '../widget/bottom_nav_bar.dart';
 
-class UserVerificationPage extends StatelessWidget {
+class UserVerificationPage extends StatefulWidget {
   const UserVerificationPage({super.key});
 
+  @override
+  State<UserVerificationPage> createState() => _UserVerificationPageState();
+}
+
+class _UserVerificationPageState extends State<UserVerificationPage> {
   // =========================
-  // UPDATE VERIFIED
+  // FIRESTORE ACTIONS
   // =========================
   Future<void> _toggleVerify(String uid, bool current) async {
     await FirebaseFirestore.instance
@@ -16,9 +22,6 @@ class UserVerificationPage extends StatelessWidget {
         .update({"verified": !current});
   }
 
-  // =========================
-  // UPDATE ROLE
-  // =========================
   Future<void> _updateRole(String uid, String role) async {
     await FirebaseFirestore.instance
         .collection("users")
@@ -26,35 +29,28 @@ class UserVerificationPage extends StatelessWidget {
         .update({"role": role});
   }
 
-  // =========================
-  // DELETE USER
-  // =========================
   Future<void> _deleteUser(BuildContext context, String uid) async {
     await FirebaseFirestore.instance.collection("users").doc(uid).delete();
-
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text("User berhasil dihapus")),
     );
   }
 
-  // =========================
-  // CONFIRM DELETE
-  // =========================
   void _confirmDelete(BuildContext context, String uid) {
     showDialog(
       context: context,
-      builder: (alertContext) => AlertDialog(
+      builder: (_) => AlertDialog(
         title: const Text("Hapus User"),
         content: const Text("Apakah Anda yakin ingin menghapus user ini?"),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(alertContext),
+            onPressed: () => Navigator.pop(context),
             child: const Text("Batal"),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
             onPressed: () async {
-              Navigator.pop(alertContext);
+              Navigator.pop(context);
               await _deleteUser(context, uid);
             },
             child: const Text("Hapus", style: TextStyle(color: Colors.white)),
@@ -69,151 +65,164 @@ class UserVerificationPage extends StatelessWidget {
   // =========================
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFE6EDFE),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isSmall = constraints.maxWidth < 360;
+        final padding = isSmall ? 12.0 : 16.0;
+        final titleSize = isSmall ? 14.0 : 16.0;
+        final subtitleSize = isSmall ? 11.0 : 12.0;
 
-      appBar: AppBar(
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: const Text("Manajemen Akun"),
-        backgroundColor: AppColors.blueMain,
-      ),
+        return Scaffold(
+          backgroundColor: const Color(0xFFE6EDFE),
 
+          appBar: AppBar(
+            leading: IconButton(
+              icon: const Icon(Icons.arrow_back),
+              onPressed: () {
+                if (context.canPop()) {
+                  context.pop();
+                } else {
+                  context.go(AppRoutes.profile);
+                }
+              },
+            ),
+            title: const Text("Manajemen Akun"),
+            backgroundColor: AppColors.blueMain,
+          ),
 
-      body: StreamBuilder<QuerySnapshot>(
-        stream: FirebaseFirestore.instance.collection("users").snapshots(),
-        builder: (context, snapshot) {
-          if (!snapshot.hasData) {
-            return const Center(child: CircularProgressIndicator());
-          }
+          body: StreamBuilder<QuerySnapshot>(
+            stream: FirebaseFirestore.instance.collection("users").snapshots(),
+            builder: (context, snapshot) {
+              if (!snapshot.hasData) {
+                return const Center(child: CircularProgressIndicator());
+              }
 
-          final users = snapshot.data!.docs;
+              final users = snapshot.data!.docs;
 
-          if (users.isEmpty) {
-            return const Center(child: Text("Tidak ada user"));
-          }
+              return SingleChildScrollView(
+                padding: EdgeInsets.all(padding),
+                child: ExpansionPanelList.radio(
+                  elevation: 0,
+                  expandedHeaderPadding: EdgeInsets.zero,
 
-          return ListView.builder(
-            padding: const EdgeInsets.all(16),
-            itemCount: users.length,
-            itemBuilder: (context, index) {
-              final doc = users[index];
-              final data = doc.data() as Map<String, dynamic>;
+                  children: users.map((doc) {
+                    final data = doc.data() as Map<String, dynamic>;
+                    final uid = doc.id;
 
-              final uid = doc.id;
-              final name = data["name"] ?? "Unknown";
-              final email = data["email"] ?? "-";
-              final rawRole = data["role"];
-              final role = (rawRole == "staff" || rawRole == "whmanager")
-                  ? rawRole
-                  : "staff";
-              final verified = data["verified"] ?? false;
+                    final name = data["name"] ?? "Unknown";
+                    final email = data["email"] ?? "-";
+                    final role =
+                    (data["role"] == "whmanager") ? "whmanager" : "staff";
+                    final verified = data["verified"] ?? false;
 
-              return Container(
-                margin: const EdgeInsets.only(bottom: 12),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: AppColors.softBorder),
-                ),
+                    return ExpansionPanelRadio(
+                      value: uid, // 🔑 KUNCI 1 PANEL SAJA
+                      canTapOnHeader: true,
 
-                child: ExpansionTile(
-                  tilePadding:
-                  const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  childrenPadding:
-                  const EdgeInsets.fromLTRB(16, 0, 16, 16),
-
-                  title: Text(
-                    name,
-                    style: const TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                  subtitle: Text(
-                    email,
-                    style: const TextStyle(fontSize: 12),
-                  ),
-
-                  trailing: Switch(
-                    value: verified,
-                    onChanged: (_) => _toggleVerify(uid, verified),
-                    activeColor: Colors.green,
-                  ),
-
-                  children: [
-                    _infoRow("User ID", uid),
-                    _infoRow("Email", email),
-
-                    const SizedBox(height: 12),
-
-                    // ROLE DROPDOWN
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        const Text(
-                          "Role",
-                          style: TextStyle(fontWeight: FontWeight.w600),
-                        ),
-                        DropdownButton<String>(
-                          value: role,
-                          items: const [
-                            DropdownMenuItem(
-                              value: "staff",
-                              child: Text("Staff"),
+                      headerBuilder: (context, isExpanded) {
+                        return ListTile(
+                          title: Text(
+                            name,
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: titleSize,
                             ),
-                            DropdownMenuItem(
-                              value: "whmanager",
-                              child: Text("WH Manager"),
+                          ),
+                          subtitle: Text(
+                            email,
+                            style: TextStyle(fontSize: subtitleSize),
+                          ),
+                          trailing: Switch(
+                            value: verified,
+                            onChanged: (_) =>
+                                _toggleVerify(uid, verified),
+                            activeColor: Colors.green,
+                          ),
+                        );
+                      },
+
+                      body: Padding(
+                        padding: EdgeInsets.fromLTRB(
+                            padding, 0, padding, padding),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            _infoRow("User ID", uid, isSmall),
+                            _infoRow("Email", email, isSmall),
+                            const SizedBox(height: 12),
+
+                            Row(
+                              children: [
+                                const Text(
+                                  "Role",
+                                  style: TextStyle(
+                                      fontWeight: FontWeight.w600),
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: DropdownButtonFormField<String>(
+                                    value: role,
+                                    isDense: true,
+                                    decoration: const InputDecoration(
+                                      border: OutlineInputBorder(),
+                                    ),
+                                    items: const [
+                                      DropdownMenuItem(
+                                          value: "staff",
+                                          child: Text("Staff")),
+                                      DropdownMenuItem(
+                                          value: "whmanager",
+                                          child: Text("WH Manager")),
+                                    ],
+                                    onChanged: (value) {
+                                      if (value != null) {
+                                        _updateRole(uid, value);
+                                      }
+                                    },
+                                  ),
+                                ),
+                              ],
+                            ),
+
+                            const SizedBox(height: 16),
+
+                            SizedBox(
+                              width: double.infinity,
+                              height: isSmall ? 40 : 48,
+                              child: ElevatedButton(
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.red,
+                                ),
+                                onPressed: () =>
+                                    _confirmDelete(context, uid),
+                                child: const Text(
+                                  "Hapus User",
+                                  style: TextStyle(color: Colors.white),
+                                ),
+                              ),
                             ),
                           ],
-                          onChanged: (value) {
-                            if (value != null) {
-                              _updateRole(uid, value);
-                            }
-                          },
-                        ),
-                      ],
-                    ),
-
-                    const SizedBox(height: 20),
-
-                    // DELETE BUTTON
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.red,
-                          shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12)),
-                        ),
-                        onPressed: () => _confirmDelete(context, uid),
-                        child: const Text(
-                          "Hapus User",
-                          style: TextStyle(color: Colors.white),
                         ),
                       ),
-                    ),
-                  ],
+                    );
+                  }).toList(),
                 ),
               );
             },
-          );
-        },
-      ),
+          ),
+        );
+      },
     );
   }
 
-  // =========================
-  // INFO ROW
-  // =========================
-  Widget _infoRow(String label, String value) {
+  Widget _infoRow(String label, String value, bool isSmall) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 6),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           SizedBox(
-            width: 80,
+            width: isSmall ? 70 : 90,
             child: Text(
               label,
               style: const TextStyle(
@@ -222,9 +231,7 @@ class UserVerificationPage extends StatelessWidget {
               ),
             ),
           ),
-          Expanded(
-            child: Text(value),
-          ),
+          Expanded(child: Text(value)),
         ],
       ),
     );
