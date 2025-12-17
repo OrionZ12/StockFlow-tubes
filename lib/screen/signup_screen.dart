@@ -4,6 +4,9 @@ import 'package:go_router/go_router.dart';
 import '../config/routes.dart';
 import '../provider/auth_provider.dart';
 import 'package:flutter/gestures.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+
+
 
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});
@@ -281,16 +284,47 @@ Future<void> _handleSignUp() async {
         actions: [
           TextButton(
             onPressed: () async {
-              // Refresh user data dari Firebase
-              final verified = await auth.reloadAndCheckVerified();
+              final auth = context.read<AuthProvider>();
 
-              if (verified) {
-                if (!mounted) return;
-                context.go(AppRoutes.signSuccess); // ⬅ masuk hanya jika verified
-              } else {
+              final verified = await auth.reloadAndCheckVerified();
+              if (!verified) {
                 showError("Email belum terverifikasi.");
+                return;
               }
+
+              final uid = auth.user?.uid;
+              final email = auth.user?.email;
+
+              if (uid == null || email == null) {
+                showError("User tidak valid.");
+                return;
+              }
+
+              // 🔥 Update status emailVerified di Firestore (opsional)
+              await FirebaseFirestore.instance
+                  .collection("users")
+                  .doc(uid)
+                  .update({
+                "emailVerified": true,
+              });
+
+              // 🔔 KIRIM NOTIF KE WH MANAGER
+              await FirebaseFirestore.instance.collection("notifications").add({
+                "type": "new_user",
+                "title": "Akun Baru",
+                "description":
+                "$email telah memverifikasi email dan menunggu persetujuan",
+                "targetRole": "whmanager",
+                "userId": uid,
+                "createdAt": FieldValue.serverTimestamp(),
+                "read": false,
+              });
+
+              if (!mounted) return;
+              context.go(AppRoutes.signSuccess);
             },
+
+
             child: const Text("Saya sudah verifikasi"),
           ),
         ],

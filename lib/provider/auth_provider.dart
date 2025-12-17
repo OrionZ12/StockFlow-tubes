@@ -9,143 +9,86 @@ class AuthProvider extends ChangeNotifier {
 
   User? _user;
   bool _isLoading = false;
-
+  bool _isAuthorized = false;
   String _role = "none";
+
+  // ================= GETTER =================
+  User? get user => _user;
+  String get uid => _user?.uid ?? "";
+  bool get isLoading => _isLoading;
+  bool get isAuthorized => _isAuthorized;
   String get role => _role;
 
-  User? get user => _user;
-  bool get isLoading => _isLoading;
-  bool get isAuthenticated => _user != null;
-
-  // =========================================================
-  // INITIALIZE AUTH
-  // =========================================================
+  // ================= INIT =================
   AuthProvider() {
     _initializeAuth();
   }
 
   void _initializeAuth() {
     _authService.authStateChanges.listen((User? user) async {
+      // DEFAULT STATE (KUNCI)
       _user = user;
+      _isAuthorized = false;
+      _role = "none";
+      notifyListeners();
 
-      if (user != null) {
-        final doc = await FirebaseFirestore.instance
-            .collection("users")
-            .doc(user.uid)
-            .get();
+      if (user == null) return;
 
-        if (doc.exists && doc.data() != null) {
-          _role = doc["role"] ?? "none";
-        } else {
-          _role = "none";
-        }
-      } else {
+      // 1️⃣ CEK EMAIL VERIFIED
+      await user.reload();
+      if (!user.emailVerified) return;
+
+      // 2️⃣ CEK FIRESTORE
+      final doc = await FirebaseFirestore.instance
+          .collection("users")
+          .doc(user.uid)
+          .get();
+
+      if (!doc.exists) return;
+
+      final data = doc.data()!;
+      final String? role = data["role"];
+      final bool verifiedByAdmin = data["verified"] == true;
+
+      // ❌ ROLE TIDAK VALID → TOLAK
+      if (role == null || role == "none") {
         _role = "none";
+        _isAuthorized = false;
+        notifyListeners();
+        return;
       }
 
+      // ❌ BELUM DIVERIFIKASI ADMIN → TOLAK
+      if (!verifiedByAdmin) {
+        _role = role; // boleh tau rolenya, tapi belum aktif
+        _isAuthorized = false;
+        notifyListeners();
+        return;
+      }
+
+      // ✅ BARU RESMI BOLEH MASUK
+      _role = role;
+      _isAuthorized = true;
       notifyListeners();
     });
   }
 
-  // =========================================================
-  // EMAIL VERIFICATION SYSTEM (FINAL VERSION)
-  // =========================================================
-
-  /// Kirim email verifikasi
-  Future<String> sendEmailVerification() async {
-    final user = FirebaseAuth.instance.currentUser;
-
-    if (user == null) return "User tidak ditemukan.";
-
-    if (user.emailVerified) {
-      return "Email kamu sudah terverifikasi.";
-    }
-
-    try {
-      await user.sendEmailVerification();
-      return "Link verifikasi telah dikirim ke email kamu.";
-    } catch (e) {
-      return "Gagal mengirim link verifikasi: $e";
-    }
-  }
-
-  /// Kirim ulang email verifikasi
-  Future<String> resendVerificationEmail() async {
-    final user = FirebaseAuth.instance.currentUser;
-
-    if (user == null) return "User tidak ditemukan.";
-    if (user.emailVerified) return "Email sudah terverifikasi.";
-
-    try {
-      await user.sendEmailVerification();
-      return "Link verifikasi telah dikirim ulang.";
-    } catch (e) {
-      return "Gagal mengirim ulang verifikasi: $e";
-    }
-  }
-
-  /// Refresh user & cek status emailVerified
-  Future<bool> reloadAndCheckVerified() async {
-    final user = FirebaseAuth.instance.currentUser;
-
-    if (user == null) return false;
-
-    await user.reload();
-    return FirebaseAuth.instance.currentUser!.emailVerified;
-  }
-
-  // =========================================================
-  // LOGIN
-  // =========================================================
+  // ================= LOGIN =================
   Future<String> login(String email, String password) async {
     _isLoading = true;
     notifyListeners();
 
     try {
       await _authService.signIn(email: email, password: password);
-
-      final user = FirebaseAuth.instance.currentUser;
-
-      if (user == null) {
-        _isLoading = false;
-        notifyListeners();
-        return "User tidak ditemukan.";
-      }
-
-      // 🔥 CEK EMAIL VERIFIKASI DULU
-      if (!user.emailVerified) {
-        await _authService.signOut();
-        _isLoading = false;
-        notifyListeners();
-        return "Email belum terverifikasi.\nSilahkan verifikasi terlebih dahulu.";
-      }
-
-      // 🔥 CEK VERIFIKASI ADMIN DI FIRESTORE
-      final doc = await FirebaseFirestore.instance
-          .collection("users")
-          .doc(user.uid)
-          .get();
-
-      if (!doc.exists || doc["verified"] != true) {
-        await _authService.signOut();
-        _isLoading = false;
-        notifyListeners();
-        return "Akun kamu belum disetujui admin.";
-      }
-
-      _role = doc["role"] ?? "none";
-
       _isLoading = false;
       notifyListeners();
       return "success";
-
     } on FirebaseAuthException catch (e) {
       _isLoading = false;
       notifyListeners();
 
       if (e.code == "user-not-found") return "Email tidak ditemukan.";
       if (e.code == "wrong-password") return "Password salah.";
-
       return e.message ?? "Gagal login.";
     }
   }
@@ -194,17 +137,25 @@ class AuthProvider extends ChangeNotifier {
 
 
 
-  // =========================================================
-  // LOGOUT
-  // =========================================================
+  // ================= EMAIL VERIFICATION CHECK =================
+  Future<bool> reloadAndCheckVerified() async {
+    final currentUser = FirebaseAuth.instance.currentUser;
+    if (currentUser == null) return false;
+
+    await currentUser.reload();
+    return FirebaseAuth.instance.currentUser?.emailVerified ?? false;
+  }
+
+  // ================= LOGOUT =================
   Future<void> signOut() async {
     await _authService.signOut();
-
     try {
       await GoogleSignIn().signOut();
     } catch (_) {}
 
+    _user = null;
     _role = "none";
+    _isAuthorized = false;
     notifyListeners();
   }
 }

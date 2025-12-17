@@ -1,8 +1,46 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
-class NotificationStaffPage extends StatelessWidget {
+import '../../provider/notif_provider.dart';
+import '../../widget/notif_list.dart';
+
+class NotificationStaffPage extends StatefulWidget {
   const NotificationStaffPage({super.key});
+
+  @override
+  State<NotificationStaffPage> createState() =>
+      _NotificationStaffPageState();
+}
+
+class _NotificationStaffPageState
+    extends State<NotificationStaffPage> {
+  String? _userId;
+
+  @override
+  void initState() {
+    super.initState();
+
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+
+    _userId = user.uid;
+
+    // 🔥 START LISTEN (provider baru)
+    Future.microtask(() {
+      context
+          .read<NotificationProvider>()
+          .startListening(_userId!);
+    });
+  }
+
+  @override
+  void dispose() {
+    // 🛑 STOP LISTEN BIAR BERSIH
+    context.read<NotificationProvider>().stopListening();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -10,7 +48,7 @@ class NotificationStaffPage extends StatelessWidget {
     final titleSize = width * 0.055;
 
     return Scaffold(
-      backgroundColor: const Color(0xffe3efff), // ✅ page sendiri
+      backgroundColor: const Color(0xffe3efff),
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
@@ -21,24 +59,23 @@ class NotificationStaffPage extends StatelessWidget {
               Row(
                 children: [
                   GestureDetector(
-                    onTap: () => context.pop(), // 🔥 BALIK KE HOME
+                    onTap: () => context.pop(),
                     child: Container(
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
                         color: const Color(0xff5a78c9),
                         borderRadius: BorderRadius.circular(12),
                       ),
-                      child:
-                      const Icon(Icons.arrow_back, color: Colors.white),
+                      child: const Icon(Icons.arrow_back,
+                          color: Colors.white),
                     ),
                   ),
                   const Spacer(),
                   const Text(
                     "Stock",
                     style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold),
                   ),
                   const Text(
                     "Flow",
@@ -64,24 +101,8 @@ class NotificationStaffPage extends StatelessWidget {
               const SizedBox(height: 20),
 
               // ================= LIST =================
-              Expanded(
-                child: ListView.separated(
-                  itemCount: 2,
-                  separatorBuilder: (_, __) =>
-                  const SizedBox(height: 12),
-                  itemBuilder: (context, index) {
-                    return Container(
-                      height: 80,
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      alignment: Alignment.centerLeft,
-                      padding: const EdgeInsets.all(12),
-                      child: const Text("Contoh Notifikasi"),
-                    );
-                  },
-                ),
+              const Expanded(
+                child: NotificationList(),
               ),
             ],
           ),
