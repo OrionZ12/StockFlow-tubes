@@ -15,15 +15,17 @@ class AppScaffold extends StatelessWidget {
   });
 
   int _indexFromLocation(String location) {
-    if (location.startsWith(AppRoutes.notification)) return 2;
+    if (location.startsWith(AppRoutes.history)) return 1;
+
     if (location.startsWith(AppRoutes.profile) ||
         location.startsWith(AppRoutes.account) ||
         location.startsWith(AppRoutes.changePassword)) {
-      return 3;
+      return 2;
     }
-    if (location.startsWith(AppRoutes.history)) return 1;
-    return 0;
+
+    return 0; // home
   }
+
 
   void _onNavTap(BuildContext context, int index) {
     switch (index) {

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import '../services/notif_service.dart';
 import '../theme/app_colors.dart';
 
 class ProductList extends StatelessWidget {
@@ -27,35 +28,115 @@ class ProductList extends StatelessWidget {
     final user = FirebaseAuth.instance.currentUser!;
     final uid = user.uid;
 
-    final userDoc =
-    await FirebaseFirestore.instance.collection("users").doc(uid).get();
-    final data = userDoc.data() as Map<String, dynamic>;
-    final username = data["name"] ?? "unknown";
+    final firestore = FirebaseFirestore.instance;
+    final itemRef = firestore.collection("items").doc(itemId);
+    final notifService = NotificationService();
 
-    int change = newStock - oldStock;
-    String type = change > 0 ? "in" : "out";
+    // ==========================
+    // AMBIL USERNAME
+    // ==========================
+    final userDoc = await firestore.collection("users").doc(uid).get();
+    final username =
+        (userDoc.data() as Map<String, dynamic>)["name"] ?? "unknown";
 
-    // Update stok
-    await FirebaseFirestore.instance.collection("items").doc(itemId).update({
-      "stok": newStock,
-      "last_updated": FieldValue.serverTimestamp(),
-      "last_updated_by": uid,
+    await firestore.runTransaction((tx) async {
+      final itemSnap = await tx.get(itemRef);
+      final data = itemSnap.data() as Map<String, dynamic>;
+
+      final bool lowNotified = data["lowStockNotified"] ?? false;
+      final bool outNotified = data["outOfStockNotified"] ?? false;
+
+      // ==========================
+      // UPDATE ITEM
+      // ==========================
+      tx.update(itemRef, {
+        "stok": newStock,
+        "last_updated": FieldValue.serverTimestamp(),
+        "last_updated_by": uid,
+      });
+
+      // ==========================
+      // HISTORY
+      // ==========================
+      final change = newStock - oldStock;
+      if (change != 0) {
+        tx.set(firestore.collection("history").doc(), {
+          "type": change > 0 ? "in" : "out",
+          "item_name": name,
+          "item_id": itemId,
+          "qty_change": change,
+          "final_stock": newStock,
+          "timestamp": FieldValue.serverTimestamp(),
+          "user_id": uid,
+          "username": username,
+        });
+      }
+
+      // ==========================
+      // FLAG UPDATE
+      // ==========================
+      if (oldStock > 5 && newStock <= 5 && !lowNotified) {
+        tx.update(itemRef, {"lowStockNotified": true});
+      }
+
+      if (oldStock > 0 && newStock == 0 && !outNotified) {
+        tx.update(itemRef, {"outOfStockNotified": true});
+      }
+
+      if (newStock > 5 && lowNotified) {
+        tx.update(itemRef, {"lowStockNotified": false});
+      }
+
+      if (newStock > 0 && outNotified) {
+        tx.update(itemRef, {"outOfStockNotified": false});
+      }
     });
 
-    // Tambah ke history jika ada perubahan
-    if (change != 0) {
-      FirebaseFirestore.instance.collection("history").add({
-        "type": type,
-        "item_name": name,
-        "item_id": itemId,
-        "qty_change": change,
-        "final_stock": newStock,
-        "timestamp": FieldValue.serverTimestamp(),
-        "user_id": uid,
-        "username": username,
-      });
+    // ==========================
+    // NOTIFICATION (DI LUAR TX)
+    // ==========================
+    if (oldStock > 5 && newStock <= 5) {
+      await notifService.notifyAllExcept(
+        title: "Stok Menipis",
+        message: "$name tersisa $newStock",
+        type: "LOW_STOCK",
+        itemId: itemId,
+        itemName: name,
+        actorUid: uid,
+        actorName: username,
+      );
     }
+
+
+    if (oldStock > 0 && newStock == 0) {
+      await notifService.notifyAllExcept(
+        title: "Stok Habis",
+        message: "$name telah habis",
+        type: "OUT_OF_STOCK",
+        itemId: itemId,
+        itemName: name,
+        actorUid: uid,
+        actorName: username,
+      );
+    }
+
+
+    if (newStock != oldStock) {
+      await notifService.notifyAllExcept(
+        title: "Perubahan Stok",
+        message: "$name diperbarui oleh $username ($oldStock → $newStock)",
+        type: "STOCK_UPDATED",
+        itemId: itemId,
+        itemName: name,
+        actorUid: uid,
+        actorName: username,
+      );
+    }
+
+
   }
+
+
 
   // =====================================================
   // POPUP DELETE

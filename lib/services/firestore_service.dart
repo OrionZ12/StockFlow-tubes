@@ -1,7 +1,11 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
+import 'notif_service.dart';
+
 class ItemService {
+  final NotificationService _notifService = NotificationService();
+
   final CollectionReference itemsRef =
   FirebaseFirestore.instance.collection('items');
 
@@ -49,6 +53,9 @@ class ItemService {
       'date': date,
       'last_updated': FieldValue.serverTimestamp(),
       'last_updated_by': user?.email ?? "unknown",
+      'lowStockNotified': false,
+      'outOfStockNotified': false,
+
     }, SetOptions(merge: true));
   }
 }
