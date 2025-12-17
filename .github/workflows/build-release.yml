@@ -80,20 +80,24 @@ jobs:
       - name: Get Version
         id: get_version
         run: |
-          VERSION=$(grep '^version: ' pubspec.yaml | cut -d ' ' -f 2 | cut -d '+' -f 1)
+          # Ditambahkan tr -d untuk membersihkan karakter ilegal agar nama file valid
+          VERSION=$(grep '^version: ' pubspec.yaml | cut -d ' ' -f 2 | cut -d '+' -f 1 | tr -d '\r' | tr -d ' ')
           echo "version=$VERSION" >> $GITHUB_OUTPUT
 
-      - name: Upload APK Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: stockflow-${{ steps.get_version.outputs.version }}
-          path: build/app/outputs/flutter-apk/app-release.apk
+          - name: Upload APK Artifact
+            uses: actions/upload-artifact@v4
+            with:
+              # Gunakan nama statis agar job release pasti menemukannya
+              name: stockflow-apk-build
+              path: build/app/outputs/flutter-apk/app-release.apk
 
   release:
     name: Create GitHub Release
     needs: build
     runs-on: ubuntu-latest
     if: startsWith(github.ref, 'refs/tags/v')
+    permissions:
+      contents: write # Memastikan izin tulis untuk membuat release
 
     steps:
       - name: Checkout Repository
@@ -102,27 +106,18 @@ jobs:
       - name: Download APK
         uses: actions/download-artifact@v4
         with:
-          name: stockflow-${{ needs.build.outputs.version }}
-          path: ./
+          name: stockflow-apk-build
+          path: .
 
       - name: Create Release
         uses: softprops/action-gh-release@v1
         with:
-          files: app-release.apk
+          # Menggunakan wildcard *.apk agar pasti terdeteksi apapun namanya
+          files: "*.apk"
+          name: StockFlow v${{ needs.build.outputs.version }}
           body: |
             ## StockFlow v${{ needs.build.outputs.version }}
-            
-            ### 📱 Download
-            Download the APK below and install on your Android device.
-            
-            ### ✨ What's New
-            - Automated build via GitHub Actions
-            - Release signed with production keystore
-            
-            ### 🔒 Security
-            - Signed with release keystore
-            - Firebase configured for production
-            - Firestore security rules enabled
+            📱 Download APK di bawah ini.
           draft: false
           prerelease: false
         env:
