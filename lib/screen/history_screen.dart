@@ -13,46 +13,57 @@ class _HistoryPageState extends State<HistoryPage> {
   String filterMode = "day"; // day | month
   String expandedMonth = "";
 
-  String _formatDate(DateTime d) =>
-      "${d.day}/${d.month}/${d.year}";
+  String _formatDate(DateTime d) => "${d.day}/${d.month}/${d.year}";
 
   String _monthName(int m) {
     const months = [
-      "", "Januari", "Februari", "Maret", "April", "Mei", "Juni",
-      "Juli", "Agustus", "September", "Oktober", "November", "Desember"
+      "",
+      "Januari",
+      "Februari",
+      "Maret",
+      "April",
+      "Mei",
+      "Juni",
+      "Juli",
+      "Agustus",
+      "September",
+      "Oktober",
+      "November",
+      "Desember"
     ];
     return months[m];
   }
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      color: AppColors.pageBackground,
-      child: Column(
+    return Scaffold(
+      backgroundColor: AppColors.pageBackground,
+      body: Column(
         children: [
-
           // ================= HEADER =================
           Padding(
             padding: const EdgeInsets.fromLTRB(18, 40, 18, 10),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-
                 const Row(
                   children: [
-                    Text("Stock",
-                        style: TextStyle(
-                            fontSize: 19,
-                            fontWeight: FontWeight.bold)),
-                    Text("Flow",
-                        style: TextStyle(
-                            fontSize: 19,
-                            fontWeight: FontWeight.bold,
-                            color: AppColors.blueMain)),
+                    Text(
+                      "Stock",
+                      style:
+                      TextStyle(fontSize: 19, fontWeight: FontWeight.bold),
+                    ),
+                    Text(
+                      "Flow",
+                      style: TextStyle(
+                        fontSize: 19,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.blueMain,
+                      ),
+                    ),
                   ],
                 ),
-
-                DropdownButton(
+                DropdownButton<String>(
                   value: filterMode,
                   underline: const SizedBox(),
                   items: const [
@@ -69,38 +80,43 @@ class _HistoryPageState extends State<HistoryPage> {
 
           // ================= CONTENT =================
           Expanded(
-            child: StreamBuilder(
+            child: StreamBuilder<QuerySnapshot>(
               stream: FirebaseFirestore.instance
                   .collection("history")
                   .orderBy("timestamp", descending: true)
                   .snapshots(),
               builder: (context, snapshot) {
-                if (!snapshot.hasData) {
+                if (snapshot.connectionState ==
+                    ConnectionState.waiting) {
                   return const Center(
                       child: CircularProgressIndicator());
                 }
 
-                final docs = snapshot.data!.docs;
-
-                if (docs.isEmpty) {
+                if (!snapshot.hasData ||
+                    snapshot.data!.docs.isEmpty) {
                   return const Center(
-                    child: Text("Belum ada riwayat"),
-                  );
+                      child: Text("Belum ada riwayat"));
                 }
+
+                final docs = snapshot.data!.docs;
 
                 // ================= PER HARI =================
                 if (filterMode == "day") {
                   return ListView.builder(
-                    padding:
-                    const EdgeInsets.symmetric(horizontal: 18),
+                    padding: const EdgeInsets.symmetric(horizontal: 18),
                     itemCount: docs.length,
                     itemBuilder: (context, index) {
                       final item =
                       docs[index].data() as Map<String, dynamic>;
-                      final isLast = index == docs.length - 1;
+
+                      if (item["timestamp"] == null ||
+                          item["type"] == null) {
+                        return const SizedBox();
+                      }
 
                       final time =
                       (item["timestamp"] as Timestamp).toDate();
+                      final isLast = index == docs.length - 1;
 
                       return _timelineCard(item, time, isLast);
                     },
@@ -111,7 +127,12 @@ class _HistoryPageState extends State<HistoryPage> {
                 Map<String, List<Map<String, dynamic>>> grouped = {};
 
                 for (var d in docs) {
-                  final data = d.data() as Map<String, dynamic>;
+                  final data =
+                  d.data() as Map<String, dynamic>;
+
+                  if (data["timestamp"] == null ||
+                      data["type"] == null) continue;
+
                   final time =
                   (data["timestamp"] as Timestamp).toDate();
                   final key =
@@ -122,15 +143,13 @@ class _HistoryPageState extends State<HistoryPage> {
                 }
 
                 return ListView(
-                  padding:
-                  const EdgeInsets.symmetric(horizontal: 18),
+                  padding: const EdgeInsets.symmetric(horizontal: 18),
                   children: grouped.entries.map((entry) {
                     final isOpen = expandedMonth == entry.key;
 
                     return Column(
                       children: [
-
-                        // ===== BULAN CARD =====
+                        // ===== BULAN NOTE =====
                         GestureDetector(
                           onTap: () {
                             setState(() {
@@ -139,8 +158,7 @@ class _HistoryPageState extends State<HistoryPage> {
                             });
                           },
                           child: Container(
-                            margin:
-                            const EdgeInsets.only(bottom: 12),
+                            margin: const EdgeInsets.only(bottom: 12),
                             padding: const EdgeInsets.all(16),
                             decoration: BoxDecoration(
                               color: Colors.white,
@@ -148,8 +166,9 @@ class _HistoryPageState extends State<HistoryPage> {
                               BorderRadius.circular(16),
                               boxShadow: const [
                                 BoxShadow(
-                                    color: Colors.black12,
-                                    blurRadius: 4)
+                                  color: Colors.black12,
+                                  blurRadius: 4,
+                                )
                               ],
                             ),
                             child: Row(
@@ -159,8 +178,9 @@ class _HistoryPageState extends State<HistoryPage> {
                                 Text(
                                   entry.key,
                                   style: const TextStyle(
-                                      fontSize: 15,
-                                      fontWeight: FontWeight.w600),
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.w600,
+                                  ),
                                 ),
                                 Icon(isOpen
                                     ? Icons.expand_less
@@ -172,12 +192,22 @@ class _HistoryPageState extends State<HistoryPage> {
 
                         // ===== ISI BULAN =====
                         if (isOpen)
-                          ...entry.value.map((item) {
+                          ...entry.value
+                              .asMap()
+                              .entries
+                              .map((e) {
+                            final index = e.key;
+                            final item = e.value;
+
                             final time =
                             (item["timestamp"] as Timestamp)
                                 .toDate();
+                            final isLastItem =
+                                index ==
+                                    entry.value.length - 1;
+
                             return _timelineCard(
-                                item, time, true);
+                                item, time, isLastItem);
                           }),
                       ],
                     );
@@ -200,20 +230,26 @@ class _HistoryPageState extends State<HistoryPage> {
     final product = item["item_name"] ?? "-";
 
     String title = "";
-    if (type == "in") title = "Barang Masuk";
-    if (type == "out") title = "Barang Keluar";
-    if (type == "add") title = "Barang Baru";
-    if (type == "delete") title = "Barang Dihapus";
-
     String action = "";
-    if (type == "in") action = "menambahkan";
-    if (type == "out") action = "mengeluarkan";
-    if (type == "add") action = "membuat";
-    if (type == "delete") action = "menghapus";
+
+    if (type == "in") {
+      title = "Barang Masuk";
+      action = "menambahkan";
+    } else if (type == "out") {
+      title = "Barang Keluar";
+      action = "mengeluarkan";
+    } else if (type == "add") {
+      title = "Barang Baru";
+      action = "membuat";
+    } else if (type == "delete") {
+      title = "Barang Dihapus";
+      action = "menghapus";
+    }
 
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        // ===== TIMELINE =====
         Column(
           children: [
             Container(
@@ -227,12 +263,15 @@ class _HistoryPageState extends State<HistoryPage> {
             if (!isLast)
               Container(
                 width: 3,
-                height: 90,
+                height: 70,
+                margin: const EdgeInsets.only(top: 2),
                 color: AppColors.blueSoft,
               ),
           ],
         ),
         const SizedBox(width: 14),
+
+        // ===== CARD =====
         Expanded(
           child: Container(
             margin: const EdgeInsets.only(bottom: 18),
@@ -244,21 +283,28 @@ class _HistoryPageState extends State<HistoryPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(_formatDate(time),
-                    style: const TextStyle(
-                        fontSize: 12,
-                        color: AppColors.textMuted)),
+                Text(
+                  _formatDate(time),
+                  style: const TextStyle(
+                    fontSize: 12,
+                    color: AppColors.textMuted,
+                  ),
+                ),
                 const SizedBox(height: 6),
-                Text(title,
-                    style: const TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w600)),
+                Text(
+                  title,
+                  style: const TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
                 const SizedBox(height: 4),
                 Text(
                   "$user $action ${qty.abs()} $product",
                   style: const TextStyle(
-                      fontSize: 13,
-                      color: AppColors.textSecondary),
+                    fontSize: 13,
+                    color: AppColors.textSecondary,
+                  ),
                 ),
               ],
             ),
