@@ -42,22 +42,9 @@ class _HomeScreenState extends State<HomeScreen> {
       }
     });
 
-    // load kategori user (kalau ada)
-    _loadCategories();
   }
 
-  Future<void> _loadCategories() async {
-    final uid = FirebaseAuth.instance.currentUser!.uid;
-    final doc =
-    await FirebaseFirestore.instance.collection("users").doc(uid).get();
 
-    if (doc.exists && doc.data()!.containsKey("categories")) {
-      kategoriList = List<String>.from(doc["categories"]);
-      kategoriList.sort((a, b) => a.compareTo(b)); // 🔥 sort A–Z
-    }
-
-    setState(() {});
-  }
 
   // ⬇ Popup Back Button
   Future<bool> _onWillPop() async {
@@ -117,15 +104,50 @@ class _HomeScreenState extends State<HomeScreen> {
                     SizedBox(height: h * 0.015),
 
                     // 🔍 SEARCH + KATEGORI
-                    SearchSection(
-                      kategoriList: kategoriList,
-                      onSearchChanged: (value) {
-                        setState(() => searchText = value.toLowerCase());
-                      },
-                      onCategoryChanged: (value) {
-                        setState(() => selectedCategory = value);
+                    StreamBuilder<QuerySnapshot>(
+                      stream: FirebaseFirestore.instance
+                          .collection("categories")
+                          .orderBy("name")
+                          .snapshots(),
+                      builder: (context, snapshot) {
+                        if (!snapshot.hasData) {
+                          return const SizedBox(height: 56); // placeholder tinggi dropdown
+                        }
+
+                        final fetchedCategories = snapshot.data!.docs
+                            .map((doc) =>
+                        (doc.data() as Map<String, dynamic>)["name"] as String)
+                            .where((e) => e.isNotEmpty)
+                            .toSet()
+                            .toList()
+                          ..sort();
+
+                        final kategoriList = [
+                          "Semua Kategori",
+                          ...fetchedCategories,
+                        ];
+
+                        // 🔑 VALIDASI KERAS (ANTI ERROR DROPDOWN)
+                        if (!kategoriList.contains(selectedCategory)) {
+                          selectedCategory = "Semua Kategori";
+                        }
+
+                        return SearchSection(
+                          kategoriList: kategoriList,
+                          selectedCategory: selectedCategory,
+                          onSearchChanged: (value) {
+                            setState(() => searchText = value.toLowerCase());
+                          },
+                          onCategoryChanged: (value) {
+                            if (value == null) return;
+                            setState(() => selectedCategory = value);
+                          },
+                        );
                       },
                     ),
+
+
+
                     SizedBox(height: h * 0.015),
 
                     // ==============================
