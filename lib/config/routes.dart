@@ -12,47 +12,46 @@ import 'package:tubes/screen/notification_settings_page.dart';
 import 'package:tubes/screen/change_password_screen.dart';
 import 'package:tubes/screen/change_password_success_screen.dart';
 import 'package:tubes/screen/addstock_screen.dart';
-import 'package:tubes/screen/signsuc_screen.dart'; 
-  // ⬅️ WAJIB ADA
+import 'package:tubes/screen/signsuc_screen.dart';
 
 import '../screen/splash_screen.dart';
 import '../screen/firstime_screen.dart';
 import '../screen/login_screen.dart';
 import '../screen/userverification_screen.dart';
 import '../screen/home_screen.dart';
+
 import '../widget/app_scaffold.dart';
 
 // =========================
-// ROUTES
+// ROUTES CONST
 // =========================
 class AppRoutes {
-  static const String splash = '/splash';
-  static const String firstTime = '/firstime';
-  static const String login = '/login';
-  static const String signSuccess = '/signsuccess';
-  static const String signUp = '/signup';
+  static const splash = '/splash';
+  static const firstTime = '/firstime';
+  static const login = '/login';
+  static const signUp = '/signup';
+  static const signSuccess = '/signsuccess';
 
-  // Bottom Nav Pages
-  static const String home = '/home';
-  static const String history = '/history';
-  static const String profile = '/profile';
-  static const String account = '/account';
+  // Bottom Nav
+  static const home = '/home';
+  static const history = '/history';
+  static const profile = '/profile';
 
-  // Other pages
-  static const String notification = '/notification';
-  static const String notificationSettings = '/notification-settings';
-  static const String changePassword = '/change-password';
-  static const String changePasswordSuccess = '/change-password-success';
-  static const String logoutConfirm = '/logout-confirm';
+  // Profile children
+  static const account = '/account';
+  static const changePassword = '/change-password';
+
+  // Other
+  static const notification = '/notification';
+  static const notificationSettings = '/notification-settings';
+  static const changePasswordSuccess = '/change-password-success';
+  static const logoutConfirm = '/logout-confirm';
   static const userVerification = '/user-verification';
-
-
-  // ➕ Halaman Tambahan
-  static const String addStock = '/addstock';
+  static const addStock = '/addstock';
 }
 
 // =========================
-// ROUTER CREATOR
+// ROUTER
 // =========================
 GoRouter createRouter() {
   return GoRouter(
@@ -61,7 +60,7 @@ GoRouter createRouter() {
     routes: [
 
       // =============================
-      // STARTER SCREENS
+      // NO NAVBAR SCREENS
       // =============================
       GoRoute(
         path: AppRoutes.splash,
@@ -85,28 +84,37 @@ GoRouter createRouter() {
       ),
       GoRoute(
         path: AppRoutes.userVerification,
-        builder: (context, state) => const UserVerificationPage(),
+        builder: (_, __) => const UserVerificationPage(),
       ),
 
-
       // =============================
-      // MAIN PAGES (WITH BOTTOM NAV)
+      // MAIN AREA (WITH BOTTOM NAV)
       // =============================
       ShellRoute(
-        builder: (context, state, child) => AppScaffold(child: child),
+        builder: (context, state, child) {
+          return AppScaffold(child: child);
+        },
         routes: [
+
+          // TAB 0 — HOME
           GoRoute(
             path: AppRoutes.home,
             builder: (_, __) => const HomeScreen(),
           ),
+
+          // TAB 1 — HISTORY
           GoRoute(
             path: AppRoutes.history,
             builder: (_, __) => const HistoryPage(),
           ),
+
+          // TAB 2 — PROFILE
           GoRoute(
             path: AppRoutes.profile,
             builder: (_, __) => const ProfilePage(),
           ),
+
+          // STILL PROFILE TAB
           GoRoute(
             path: AppRoutes.account,
             builder: (_, __) => const AccountPage(),
@@ -119,7 +127,7 @@ GoRouter createRouter() {
       ),
 
       // =============================
-      // PAGES OUTSIDE NAVBAR
+      // OUTSIDE NAVBAR
       // =============================
       GoRoute(
         path: AppRoutes.notification,
@@ -137,13 +145,9 @@ GoRouter createRouter() {
         path: AppRoutes.logoutConfirm,
         builder: (_, __) => const LogoutConfirmScreen(),
       ),
-
-      // =============================
-      // ADD STOCK PAGE (NEW)
-      // =============================
       GoRoute(
         path: AppRoutes.addStock,
-        builder: (_, __) => const AddStockPage(),  // ⬅️ CLASS SUDAH BENAR
+        builder: (_, __) => const AddStockPage(),
       ),
     ],
 
@@ -154,8 +158,8 @@ GoRouter createRouter() {
       body: Center(
         child: Text(
           "404 - Page Not Found\n${state.uri.path}",
-          style: const TextStyle(color: Colors.redAccent, fontSize: 16),
           textAlign: TextAlign.center,
+          style: const TextStyle(color: Colors.redAccent, fontSize: 16),
         ),
       ),
     ),
