@@ -22,6 +22,14 @@
           }
         },
         {
+          "client_id": "285179010216-du9v79j7tc0e4sar09nohq7dbm753uus.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.tubes",
+            "certificate_hash": "c13efe15a3be2185ff1c991b32af02e222b13899"
+          }
+        },
+        {
           "client_id": "285179010216-80ij5utpr02r5s16lk3lhth3aiip0udj.apps.googleusercontent.com",
           "client_type": 3
         }
