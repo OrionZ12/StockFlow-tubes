@@ -10,7 +10,9 @@ class HistoryPage extends StatefulWidget {
 }
 
 class _HistoryPageState extends State<HistoryPage> {
-  String filterMode = "day"; // day | month
+
+  String _formatDate(DateTime d) =>
+      "${d.day}/${d.month}/${d.year}";
 
   @override
   Widget build(BuildContext context) {
@@ -20,50 +22,32 @@ class _HistoryPageState extends State<HistoryPage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
 
-          // HEADER
+          // ================= HEADER =================
           Padding(
             padding: const EdgeInsets.fromLTRB(18, 40, 18, 10),
             child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Row(
-                  children: [
-                    Text(
-                      "Stock",
-                      style: TextStyle(
-                        color: AppColors.textPrimary,
-                        fontSize: 19,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    Text(
-                      "Flow",
-                      style: TextStyle(
-                        color: AppColors.blueMain,
-                        fontSize: 19,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ],
+              children: const [
+                Text(
+                  "Stock",
+                  style: TextStyle(
+                    color: AppColors.textPrimary,
+                    fontSize: 19,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
-
-                // FILTER
-                DropdownButton(
-                  value: filterMode,
-                  underline: const SizedBox(),
-                  items: const [
-                    DropdownMenuItem(value: "day", child: Text("Per Hari")),
-                    DropdownMenuItem(value: "month", child: Text("Per Bulan")),
-                  ],
-                  onChanged: (value) {
-                    setState(() => filterMode = value!);
-                  },
+                Text(
+                  "Flow",
+                  style: TextStyle(
+                    color: AppColors.blueMain,
+                    fontSize: 19,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ],
             ),
           ),
 
-          // LIST
+          // ================= LIST =================
           Expanded(
             child: StreamBuilder(
               stream: FirebaseFirestore.instance
@@ -73,7 +57,9 @@ class _HistoryPageState extends State<HistoryPage> {
               builder: (context, snapshot) {
                 if (!snapshot.hasData) {
                   return const Center(
-                      child: CircularProgressIndicator(color: AppColors.blueMain));
+                    child: CircularProgressIndicator(
+                        color: AppColors.blueMain),
+                  );
                 }
 
                 final docs = snapshot.data!.docs;
@@ -91,70 +77,79 @@ class _HistoryPageState extends State<HistoryPage> {
                   padding: const EdgeInsets.symmetric(horizontal: 18),
                   itemCount: docs.length,
                   itemBuilder: (context, index) {
-                    final item = docs[index].data() as Map<String, dynamic>;
+                    final item =
+                    docs[index].data() as Map<String, dynamic>;
                     final isLast = index == docs.length - 1;
-
-                    final type = item["type"];
-                    final String username = item["username"] ?? "unknown";
-                    final int qty = item["qty_change"] ?? 0;
-                    final String product = item["item_name"] ?? "-";
 
                     final DateTime time =
                     (item["timestamp"] as Timestamp).toDate();
 
-// TITLE
+                    final String type = item["type"];
+                    final String user =
+                        item["username"] ?? "unknown";
+                    final int qty =
+                        item["qty_change"] ?? 0;
+                    final String product =
+                        item["item_name"] ?? "-";
+
                     String title = "";
                     if (type == "in") title = "Barang Masuk";
                     if (type == "out") title = "Barang Keluar";
                     if (type == "add") title = "Barang Baru";
                     if (type == "delete") title = "Barang Dihapus";
 
-// ACTION
                     String action = "";
                     if (type == "in") action = "menambahkan";
                     if (type == "out") action = "mengeluarkan";
                     if (type == "add") action = "membuat barang";
                     if (type == "delete") action = "menghapus barang";
 
-                    String desc = "$username $action ${qty.abs()} $product";
+                    final desc =
+                        "$user $action ${qty.abs()} $product";
 
                     return Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // DOT + LINE
+
+                        // ===== TIMELINE =====
                         Column(
                           children: [
                             Container(
-                              width: 18,
-                              height: 18,
+                              width: 16,
+                              height: 16,
                               decoration: BoxDecoration(
                                 color: AppColors.blueSoft,
-                                borderRadius: BorderRadius.circular(20),
+                                borderRadius:
+                                BorderRadius.circular(20),
                               ),
                             ),
                             if (!isLast)
                               Container(
                                 width: 3,
-                                height: 70,
+                                height: 90,
                                 color: AppColors.blueSoft,
                               ),
                           ],
                         ),
 
-                        const SizedBox(width: 15),
+                        const SizedBox(width: 14),
 
-                        // CARD
+                        // ===== CARD =====
                         Expanded(
                           child: GestureDetector(
-                            onTap: () => _showDetail(context, item),
+                            onTap: () =>
+                                _showDetail(context, item),
                             child: Container(
-                              margin: const EdgeInsets.only(bottom: 20),
+                              margin:
+                              const EdgeInsets.only(bottom: 18),
                               padding: const EdgeInsets.symmetric(
                                   horizontal: 18, vertical: 16),
                               decoration: BoxDecoration(
                                 color: Colors.white,
-                                borderRadius: BorderRadius.circular(18),
-                                border: Border.all(color: AppColors.softBorder),
+                                borderRadius:
+                                BorderRadius.circular(18),
+                                border: Border.all(
+                                    color: AppColors.softBorder),
                                 boxShadow: const [
                                   BoxShadow(
                                     color: Colors.black12,
@@ -164,30 +159,42 @@ class _HistoryPageState extends State<HistoryPage> {
                                 ],
                               ),
                               child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
+                                crossAxisAlignment:
+                                CrossAxisAlignment.start,
                                 children: [
+
+                                  // ===== TANGGAL (ATAS) =====
+                                  Text(
+                                    _formatDate(time),
+                                    style: const TextStyle(
+                                      fontSize: 12,
+                                      color: AppColors.textMuted,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+
+                                  const SizedBox(height: 6),
+
+                                  // ===== TITLE =====
                                   Text(
                                     title,
                                     style: const TextStyle(
                                       fontSize: 15,
                                       fontWeight: FontWeight.w600,
-                                      color: AppColors.textPrimary,
+                                      color:
+                                      AppColors.textPrimary,
                                     ),
                                   ),
+
                                   const SizedBox(height: 4),
+
+                                  // ===== DESKRIPSI =====
                                   Text(
                                     desc,
                                     style: const TextStyle(
                                       fontSize: 13,
-                                      color: AppColors.textSecondary,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 10),
-                                  Text(
-                                    "${time.day}/${time.month}/${time.year}",
-                                    style: const TextStyle(
-                                      fontSize: 12,
-                                      color: AppColors.textMuted,
+                                      color: AppColors
+                                          .textSecondary,
                                     ),
                                   ),
                                 ],
@@ -202,12 +209,12 @@ class _HistoryPageState extends State<HistoryPage> {
               },
             ),
           ),
-
         ],
       ),
     );
   }
 
+  // ================= DETAIL =================
   void _showDetail(BuildContext context, Map<String, dynamic> item) {
     final DateTime time =
     (item["timestamp"] as Timestamp).toDate();
@@ -216,17 +223,20 @@ class _HistoryPageState extends State<HistoryPage> {
       context: context,
       backgroundColor: Colors.white,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        borderRadius:
+        BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      builder: (_) => Container(
+      builder: (_) => Padding(
         padding: const EdgeInsets.all(20),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text("Detail Aktivitas",
-                style: TextStyle(
-                    fontSize: 18, fontWeight: FontWeight.bold)),
+            const Text(
+              "Detail Aktivitas",
+              style:
+              TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
             const SizedBox(height: 15),
             Text("User: ${item["username"]}"),
             Text("Jenis: ${item["type"]}"),
