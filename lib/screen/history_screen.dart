@@ -10,44 +10,64 @@ class HistoryPage extends StatefulWidget {
 }
 
 class _HistoryPageState extends State<HistoryPage> {
+  String filterMode = "day"; // day | month
+  String expandedMonth = "";
 
   String _formatDate(DateTime d) =>
       "${d.day}/${d.month}/${d.year}";
+
+  String _monthName(int m) {
+    const months = [
+      "", "Januari", "Februari", "Maret", "April", "Mei", "Juni",
+      "Juli", "Agustus", "September", "Oktober", "November", "Desember"
+    ];
+    return months[m];
+  }
 
   @override
   Widget build(BuildContext context) {
     return Container(
       color: AppColors.pageBackground,
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
 
           // ================= HEADER =================
           Padding(
             padding: const EdgeInsets.fromLTRB(18, 40, 18, 10),
             child: Row(
-              children: const [
-                Text(
-                  "Stock",
-                  style: TextStyle(
-                    color: AppColors.textPrimary,
-                    fontSize: 19,
-                    fontWeight: FontWeight.bold,
-                  ),
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+
+                const Row(
+                  children: [
+                    Text("Stock",
+                        style: TextStyle(
+                            fontSize: 19,
+                            fontWeight: FontWeight.bold)),
+                    Text("Flow",
+                        style: TextStyle(
+                            fontSize: 19,
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.blueMain)),
+                  ],
                 ),
-                Text(
-                  "Flow",
-                  style: TextStyle(
-                    color: AppColors.blueMain,
-                    fontSize: 19,
-                    fontWeight: FontWeight.bold,
-                  ),
+
+                DropdownButton(
+                  value: filterMode,
+                  underline: const SizedBox(),
+                  items: const [
+                    DropdownMenuItem(
+                        value: "day", child: Text("Per Hari")),
+                    DropdownMenuItem(
+                        value: "month", child: Text("Per Bulan")),
+                  ],
+                  onChanged: (v) => setState(() => filterMode = v!),
                 ),
               ],
             ),
           ),
 
-          // ================= LIST =================
+          // ================= CONTENT =================
           Expanded(
             child: StreamBuilder(
               stream: FirebaseFirestore.instance
@@ -57,154 +77,111 @@ class _HistoryPageState extends State<HistoryPage> {
               builder: (context, snapshot) {
                 if (!snapshot.hasData) {
                   return const Center(
-                    child: CircularProgressIndicator(
-                        color: AppColors.blueMain),
-                  );
+                      child: CircularProgressIndicator());
                 }
 
                 final docs = snapshot.data!.docs;
 
                 if (docs.isEmpty) {
                   return const Center(
-                    child: Text(
-                      "Belum ada riwayat...",
-                      style: TextStyle(color: AppColors.textMuted),
-                    ),
+                    child: Text("Belum ada riwayat"),
                   );
                 }
 
-                return ListView.builder(
-                  padding: const EdgeInsets.symmetric(horizontal: 18),
-                  itemCount: docs.length,
-                  itemBuilder: (context, index) {
-                    final item =
-                    docs[index].data() as Map<String, dynamic>;
-                    final isLast = index == docs.length - 1;
+                // ================= PER HARI =================
+                if (filterMode == "day") {
+                  return ListView.builder(
+                    padding:
+                    const EdgeInsets.symmetric(horizontal: 18),
+                    itemCount: docs.length,
+                    itemBuilder: (context, index) {
+                      final item =
+                      docs[index].data() as Map<String, dynamic>;
+                      final isLast = index == docs.length - 1;
 
-                    final DateTime time =
-                    (item["timestamp"] as Timestamp).toDate();
+                      final time =
+                      (item["timestamp"] as Timestamp).toDate();
 
-                    final String type = item["type"];
-                    final String user =
-                        item["username"] ?? "unknown";
-                    final int qty =
-                        item["qty_change"] ?? 0;
-                    final String product =
-                        item["item_name"] ?? "-";
+                      return _timelineCard(item, time, isLast);
+                    },
+                  );
+                }
 
-                    String title = "";
-                    if (type == "in") title = "Barang Masuk";
-                    if (type == "out") title = "Barang Keluar";
-                    if (type == "add") title = "Barang Baru";
-                    if (type == "delete") title = "Barang Dihapus";
+                // ================= PER BULAN =================
+                Map<String, List<Map<String, dynamic>>> grouped = {};
 
-                    String action = "";
-                    if (type == "in") action = "menambahkan";
-                    if (type == "out") action = "mengeluarkan";
-                    if (type == "add") action = "membuat barang";
-                    if (type == "delete") action = "menghapus barang";
+                for (var d in docs) {
+                  final data = d.data() as Map<String, dynamic>;
+                  final time =
+                  (data["timestamp"] as Timestamp).toDate();
+                  final key =
+                      "${_monthName(time.month)} ${time.year}";
 
-                    final desc =
-                        "$user $action ${qty.abs()} $product";
+                  grouped.putIfAbsent(key, () => []);
+                  grouped[key]!.add(data);
+                }
 
-                    return Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                return ListView(
+                  padding:
+                  const EdgeInsets.symmetric(horizontal: 18),
+                  children: grouped.entries.map((entry) {
+                    final isOpen = expandedMonth == entry.key;
+
+                    return Column(
                       children: [
 
-                        // ===== TIMELINE =====
-                        Column(
-                          children: [
-                            Container(
-                              width: 16,
-                              height: 16,
-                              decoration: BoxDecoration(
-                                color: AppColors.blueSoft,
-                                borderRadius:
-                                BorderRadius.circular(20),
-                              ),
-                            ),
-                            if (!isLast)
-                              Container(
-                                width: 3,
-                                height: 90,
-                                color: AppColors.blueSoft,
-                              ),
-                          ],
-                        ),
-
-                        const SizedBox(width: 14),
-
-                        // ===== CARD =====
-                        Expanded(
-                          child: GestureDetector(
-                            onTap: () =>
-                                _showDetail(context, item),
-                            child: Container(
-                              margin:
-                              const EdgeInsets.only(bottom: 18),
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 18, vertical: 16),
-                              decoration: BoxDecoration(
-                                color: Colors.white,
-                                borderRadius:
-                                BorderRadius.circular(18),
-                                border: Border.all(
-                                    color: AppColors.softBorder),
-                                boxShadow: const [
-                                  BoxShadow(
+                        // ===== BULAN CARD =====
+                        GestureDetector(
+                          onTap: () {
+                            setState(() {
+                              expandedMonth =
+                              isOpen ? "" : entry.key;
+                            });
+                          },
+                          child: Container(
+                            margin:
+                            const EdgeInsets.only(bottom: 12),
+                            padding: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius:
+                              BorderRadius.circular(16),
+                              boxShadow: const [
+                                BoxShadow(
                                     color: Colors.black12,
-                                    blurRadius: 4,
-                                    offset: Offset(0, 1),
-                                  )
-                                ],
-                              ),
-                              child: Column(
-                                crossAxisAlignment:
-                                CrossAxisAlignment.start,
-                                children: [
-
-                                  // ===== TANGGAL (ATAS) =====
-                                  Text(
-                                    _formatDate(time),
-                                    style: const TextStyle(
-                                      fontSize: 12,
-                                      color: AppColors.textMuted,
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                  ),
-
-                                  const SizedBox(height: 6),
-
-                                  // ===== TITLE =====
-                                  Text(
-                                    title,
-                                    style: const TextStyle(
+                                    blurRadius: 4)
+                              ],
+                            ),
+                            child: Row(
+                              mainAxisAlignment:
+                              MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  entry.key,
+                                  style: const TextStyle(
                                       fontSize: 15,
-                                      fontWeight: FontWeight.w600,
-                                      color:
-                                      AppColors.textPrimary,
-                                    ),
-                                  ),
-
-                                  const SizedBox(height: 4),
-
-                                  // ===== DESKRIPSI =====
-                                  Text(
-                                    desc,
-                                    style: const TextStyle(
-                                      fontSize: 13,
-                                      color: AppColors
-                                          .textSecondary,
-                                    ),
-                                  ),
-                                ],
-                              ),
+                                      fontWeight: FontWeight.w600),
+                                ),
+                                Icon(isOpen
+                                    ? Icons.expand_less
+                                    : Icons.expand_more),
+                              ],
                             ),
                           ),
                         ),
+
+                        // ===== ISI BULAN =====
+                        if (isOpen)
+                          ...entry.value.map((item) {
+                            final time =
+                            (item["timestamp"] as Timestamp)
+                                .toDate();
+                            return _timelineCard(
+                                item, time, true);
+                          }),
                       ],
                     );
-                  },
+                  }).toList(),
                 );
               },
             ),
@@ -214,38 +191,80 @@ class _HistoryPageState extends State<HistoryPage> {
     );
   }
 
-  // ================= DETAIL =================
-  void _showDetail(BuildContext context, Map<String, dynamic> item) {
-    final DateTime time =
-    (item["timestamp"] as Timestamp).toDate();
+  // ================= TIMELINE CARD =================
+  Widget _timelineCard(
+      Map<String, dynamic> item, DateTime time, bool isLast) {
+    final type = item["type"];
+    final user = item["username"] ?? "unknown";
+    final qty = item["qty_change"] ?? 0;
+    final product = item["item_name"] ?? "-";
 
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.white,
-      shape: const RoundedRectangleBorder(
-        borderRadius:
-        BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (_) => Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
+    String title = "";
+    if (type == "in") title = "Barang Masuk";
+    if (type == "out") title = "Barang Keluar";
+    if (type == "add") title = "Barang Baru";
+    if (type == "delete") title = "Barang Dihapus";
+
+    String action = "";
+    if (type == "in") action = "menambahkan";
+    if (type == "out") action = "mengeluarkan";
+    if (type == "add") action = "membuat";
+    if (type == "delete") action = "menghapus";
+
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Column(
           children: [
-            const Text(
-              "Detail Aktivitas",
-              style:
-              TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            Container(
+              width: 16,
+              height: 16,
+              decoration: BoxDecoration(
+                color: AppColors.blueSoft,
+                borderRadius: BorderRadius.circular(20),
+              ),
             ),
-            const SizedBox(height: 15),
-            Text("User: ${item["username"]}"),
-            Text("Jenis: ${item["type"]}"),
-            Text("Jumlah: ${item["qty_change"]}"),
-            Text("Barang: ${item["item_name"]}"),
-            Text("Waktu: $time"),
+            if (!isLast)
+              Container(
+                width: 3,
+                height: 90,
+                color: AppColors.blueSoft,
+              ),
           ],
         ),
-      ),
+        const SizedBox(width: 14),
+        Expanded(
+          child: Container(
+            margin: const EdgeInsets.only(bottom: 18),
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(18),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(_formatDate(time),
+                    style: const TextStyle(
+                        fontSize: 12,
+                        color: AppColors.textMuted)),
+                const SizedBox(height: 6),
+                Text(title,
+                    style: const TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600)),
+                const SizedBox(height: 4),
+                Text(
+                  "$user $action ${qty.abs()} $product",
+                  style: const TextStyle(
+                      fontSize: 13,
+                      color: AppColors.textSecondary),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
